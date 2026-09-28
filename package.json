@@ -1,0 +1,22 @@
+{
+  "name": "publish-from-notion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Publish blog posts from Notion to your Next.js site with one checkbox. Official Notion API, zero runtime dependencies, SEO built in.",
+  "license": "MIT",
+  "author": "Loris (https://github.com/loriscomba97)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --import ./test/register.mjs --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "check:safety": "node scripts/check-public-safety.mjs",
+    "check:safety:history": "node scripts/check-public-safety.mjs --history"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.4",
+    "typescript": "7.0.2"
+  }
+}

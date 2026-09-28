@@ -1,0 +1,16 @@
+#!/bin/sh
+# Maintainer guard, enabled with `git config core.hooksPath .githooks`.
+# 1. Only GitHub noreply identities may commit, so no personal or work email enters public history.
+# 2. The working tree must pass the public-safety scan, private denylist included.
+email_of() { git var "$1" | sed -E 's/.*<([^>]*)>.*/\1/'; }
+ok() { case "$1" in *@users.noreply.github.com) return 0 ;; *) return 1 ;; esac; }
+
+author=$(email_of GIT_AUTHOR_IDENT)
+committer=$(email_of GIT_COMMITTER_IDENT)
+if ! ok "$author" || ! ok "$committer"; then
+  echo "pre-commit: author and committer email must be a GitHub noreply address." >&2
+  echo "Set it for this repository: git config user.email 12345678+username@users.noreply.github.com" >&2
+  exit 1
+fi
+
+exec node scripts/check-public-safety.mjs --require-denylist

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Maintainer guard: everything pushed becomes public, so scan every blob, path,
+# commit message and commit identity in the whole history, private denylist included.
+exec node scripts/check-public-safety.mjs --history --require-denylist

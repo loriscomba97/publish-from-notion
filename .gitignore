@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# next.js and build output
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# environment files: real values never enter the repository; .env.example is the only exception
+.env*
+!.env.example
+
+# os and editor
+.DS_Store
+*.log
