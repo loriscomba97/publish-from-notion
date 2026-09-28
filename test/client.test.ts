@@ -43,6 +43,19 @@ describe('createNotionClient', () => {
     assert.deepEqual(seen, [{ method: 'POST', path: `/data_sources/${id}/query`, tags: ['notion:posts'], fresh: false }]);
   });
 
+  it('uses the global fetch at call time, so a fetch patched after import still sees every request', async () => {
+    const original = globalThis.fetch;
+    const client = createNotionClient({ token: TOKEN });
+    const { fetch, requests } = scriptedFetch([json(200, { object: 'page', id: 'p' })]);
+    globalThis.fetch = fetch;
+    try {
+      await client.retrievePage(uuid());
+    } finally {
+      globalThis.fetch = original;
+    }
+    assert.equal(requests.length, 1);
+  });
+
   it('follows pagination cursors', async () => {
     const { fetch, requests } = scriptedFetch([json(200, list([{ object: 'block', id: 'a' }], 'cursor-2')), json(200, list([{ object: 'block', id: 'b' }]))]);
     const client = createNotionClient({ token: TOKEN, fetch });

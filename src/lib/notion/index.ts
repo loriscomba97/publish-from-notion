@@ -8,7 +8,7 @@ export type { CallOptions, NotionClient, NotionClientOptions, QueryBody, Request
 export { defineBlogConfig, DEFAULT_PROPERTIES } from './config';
 export type { BlogConfig, BlogConfigInput, PropertyNames, PublishRule } from './config';
 
-export { queryPosts, getPosts, findPost, findPostToRedirect, mapPost, publishFilter, coverAltText, AI_IMAGE_NOTE } from './posts';
+export { queryPosts, getPosts, findPost, mapPost, publishFilter, coverAltText, AI_IMAGE_NOTE } from './posts';
 export type { Post, SkippedRow } from './posts';
 
 export { loadArticle } from './article';

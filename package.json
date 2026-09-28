@@ -10,13 +10,26 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "test": "node --import ./test/register.mjs --test \"test/**/*.test.ts\"",
+    "dev": "next dev",
+    "prebuild": "node --env-file-if-exists=.env.local --import ./scripts/register.mjs scripts/check-content.ts",
+    "build": "next build",
+    "start": "next start",
+    "demo": "node scripts/demo.mjs",
+    "check:content": "node --env-file-if-exists=.env.local --import ./scripts/register.mjs scripts/check-content.ts --bodies",
+    "test": "node --import ./scripts/register.mjs --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "check:safety": "node scripts/check-public-safety.mjs",
     "check:safety:history": "node scripts/check-public-safety.mjs --history"
   },
   "devDependencies": {
     "@types/node": "22.20.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "next": "16.3.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }

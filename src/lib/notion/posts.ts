@@ -151,11 +151,3 @@ export function findPost(posts: Post[], slug: string): Post | undefined {
   return posts.find((post) => post.slug === wanted);
 }
 
-/**
- * The post a non-canonical segment was meant to reach ("My-Post" → "my-post"), so the route can
- * redirect permanently instead of serving the same article under two URLs.
- */
-export function findPostToRedirect(posts: Post[], slug: string): Post | undefined {
-  const normalized = slugify(decodeSegment(slug));
-  return normalized && normalized !== decodeSegment(slug) ? posts.find((post) => post.slug === normalized) : undefined;
-}

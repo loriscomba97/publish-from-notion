@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { defineBlogConfig } from '../src/lib/notion/config';
-import { coverAltText, findPost, findPostToRedirect, publishFilter, queryPosts } from '../src/lib/notion/posts';
+import { coverAltText, findPost, publishFilter, queryPosts } from '../src/lib/notion/posts';
 import { TAGS } from '../src/lib/notion/tags';
 import { mockClient, page, postRow, prop, uuid } from './helpers';
 
@@ -133,10 +133,4 @@ describe('finding posts by URL segment', () => {
     assert.equal(findPost(posts, 'Hello'), undefined);
   });
 
-  it('suggests the canonical post for a non-canonical segment, so the route can redirect', async () => {
-    const { posts } = await queryPosts(mockClient({ rows: [postRow({ slug: 'hello-world' })] }), config);
-    assert.equal(findPostToRedirect(posts, 'Hello-World')?.slug, 'hello-world');
-    assert.equal(findPostToRedirect(posts, 'hello-world'), undefined);
-    assert.equal(findPostToRedirect(posts, 'nothing'), undefined);
-  });
 });

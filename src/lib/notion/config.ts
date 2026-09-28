@@ -48,6 +48,8 @@ export type BlogConfig = {
   /** Canonical origin of the site, e.g. "https://www.example.com". */
   siteUrl: string;
   siteName: string;
+  /** One sentence about the site, for meta tags, the RSS feed and llms.txt. */
+  description: string;
   /** Route that serves images uploaded to Notion, e.g. "/notion-image". */
   imagePath: string;
 };
@@ -81,6 +83,7 @@ export function defineBlogConfig(input: BlogConfigInput = {}): BlogConfig {
     basePath: path(input.basePath ?? '/blog'),
     siteUrl: (input.siteUrl ?? 'http://localhost:3000').replace(/\/+$/, ''),
     siteName: input.siteName ?? 'Blog',
+    description: input.description ?? '',
     imagePath: path(input.imagePath ?? '/notion-image'),
   };
 }

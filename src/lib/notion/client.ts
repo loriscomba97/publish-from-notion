@@ -30,6 +30,8 @@ export type NotionClientOptions = {
   /** Extra fetch options per request, e.g. Next.js caching `{ next: { revalidate, tags } }`. */
   requestInit?: (request: RequestContext) => RequestInit;
   fetch?: typeof fetch;
+  /** API root, for tests against a local mock. Default https://api.notion.com/v1. */
+  baseUrl?: string;
   /** Retries on 429, 5xx and network errors. Default 5. */
   maxRetries?: number;
   /** Requests in flight at once. Default 3. */
@@ -114,7 +116,10 @@ export function createLimiter(max: number) {
 
 export function createNotionClient(options: NotionClientOptions): NotionClient {
   const { token } = options;
-  const doFetch = options.fetch ?? globalThis.fetch.bind(globalThis);
+  // Look fetch up on every call, never once at import: frameworks such as Next.js install their
+  // caching fetch after modules load, and a captured reference would silently bypass it.
+  const doFetch: typeof fetch = options.fetch ?? ((input, init) => globalThis.fetch(input, init));
+  const baseUrl = (options.baseUrl || NOTION_API_URL).replace(/\/+$/, '');
   const maxRetries = options.maxRetries ?? 5;
   const log = options.log ?? ((message: string) => console.warn(`[notion] ${message}`));
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
@@ -134,7 +139,7 @@ export function createNotionClient(options: NotionClientOptions): NotionClient {
       let networkError: unknown;
       try {
         res = await limit(() =>
-          doFetch(`${NOTION_API_URL}${path}`, {
+          doFetch(`${baseUrl}${path}`, {
             ...extra,
             method,
             headers,
