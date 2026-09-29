@@ -35,7 +35,7 @@ const NOTION_ID = /([0-9a-f]{8})-?([0-9a-f]{4})-?([0-9a-f]{4})-?([0-9a-f]{4})-?(
  */
 export function normalizeNotionId(input: string): string | null {
   const path = input.trim().split(/[?#]/)[0] ?? '';
-  const match = [...path.matchAll(NOTION_ID)].at(-1);
+  const match = Array.from(path.matchAll(NOTION_ID)).at(-1);
   if (!match) return null;
   return match.slice(1, 6).join('-').toLowerCase();
 }
@@ -118,7 +118,7 @@ export function toHex(bytes: Uint8Array): string {
 
 export function toBase64Url(bytes: Uint8Array): string {
   let binary = '';
-  for (const b of bytes) binary += String.fromCharCode(b);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i] ?? 0);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 

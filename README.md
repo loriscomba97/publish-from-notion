@@ -117,7 +117,7 @@ Missing descriptions, overlong titles and covers without alt text are warnings. 
 
 ## Add it to an existing Next.js site
 
-Copy [`src/lib/notion`](src/lib/notion) (the core, no dependencies), [`src/lib/blog.ts`](src/lib/blog.ts) (the Next.js wiring), [`src/blog.config.ts`](src/blog.config.ts) and the routes you want from [`src/app`](src/app): `blog`, `notion-image`, `api/notion-webhook`, and optionally the sitemap, robots, feed and `llms.txt`. The template targets Next.js 16; on older versions, call `revalidateTag(tag)` with one argument in the webhook route.
+Copy [`src/lib/notion`](src/lib/notion) (the core, no dependencies), [`src/lib/blog.ts`](src/lib/blog.ts) (the Next.js wiring), [`src/blog.config.ts`](src/blog.config.ts) and the routes you want from [`src/app`](src/app): `blog`, `notion-image`, `api/notion-webhook`, and optionally the sitemap, robots, feed and `llms.txt`. The template targets Next.js 16; on older versions, call `revalidateTag(tag)` with one argument in the webhook route. The core type-checks with a TypeScript `target` of ES2017 or later, the default in new Next.js projects.
 
 ## Security
 

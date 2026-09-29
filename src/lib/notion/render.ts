@@ -81,7 +81,7 @@ export function renderBlocks(nodes: BlockNode[], options: RenderOptions = {}): R
     html,
     headings: ctx.headings,
     text: ctx.text.join(' ').replace(/\s+/g, ' ').trim(),
-    unsupported: [...ctx.unsupported],
+    unsupported: Array.from(ctx.unsupported),
   };
 }
 

@@ -45,9 +45,6 @@ export async function fetchBlockTree(
 }
 
 /** Every node of the tree, depth first. */
-export function* walkBlocks(nodes: BlockNode[]): Generator<BlockNode> {
-  for (const node of nodes) {
-    yield node;
-    yield* walkBlocks(node.children);
-  }
+export function walkBlocks(nodes: BlockNode[]): BlockNode[] {
+  return nodes.flatMap((node) => [node, ...walkBlocks(node.children)]);
 }
