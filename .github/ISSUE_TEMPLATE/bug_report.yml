@@ -1,0 +1,53 @@
+name: Bug report
+description: Something does not work the way the README says.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Never paste a Notion token, a verification token or private workspace content here.
+        Security problems go through the Security tab ("Report a vulnerability"), not an issue.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps, ideally with the demo content or a throwaway workspace.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or output
+      description: Build output, server logs or the content check report, with tokens and private data removed.
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and host
+      description: Kit version or commit, Next.js and Node.js versions, and where the site runs.
+      placeholder: 1.0.0, Next.js 16.3, Node.js 24, Vercel
+    validations:
+      required: true
+  - type: dropdown
+    id: publishing
+    attributes:
+      label: Instant publishing
+      options:
+        - Not set up (hourly refresh)
+        - Database automation
+        - Connection webhook
+        - Both
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before you submit
+      options:
+        - label: I removed tokens, secrets and private workspace content from this issue.
+          required: true

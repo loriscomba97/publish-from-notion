@@ -1,6 +1,15 @@
 # Publish from Notion
 
+[![CI](https://github.com/loriscomba97/publish-from-notion/actions/workflows/ci.yml/badge.svg)](https://github.com/loriscomba97/publish-from-notion/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node.js 22.18+](https://img.shields.io/badge/node-22.18%2B-339933.svg)](https://nodejs.org)
+[![Core dependencies: 0](https://img.shields.io/badge/core%20dependencies-0-brightgreen.svg)](src/lib/notion)
+
 **Your CMS is a checkbox.** Write in Notion, tick *Published*, and the post is live on your own Next.js site, with the SEO already done. With a Notion automation, it takes a few seconds.
+
+**[Live demo](https://publish-from-notion.vercel.app)** · [Connect Notion](#connect-notion) · [Instant publishing](#instant-publishing) · [What it does not do](#what-it-does-not-do)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion&env=NOTION_TOKEN,NOTION_DATA_SOURCE&envDescription=The%20API%20token%20of%20your%20Notion%20connection%20and%20the%20link%20to%20your%20blog%20database&envLink=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion%23connect-notion&project-name=notion-blog&repository-name=notion-blog)
 
 - **Official Notion API, private drafts.** No session cookie, nothing shared to the web. Built on Notion API version 2025-09-03 (data sources).
 - **Instant publishing.** A Notion automation or a signed connection webhook purges exactly the post that changed. An hourly refresh is the safety net.
@@ -61,7 +70,7 @@ NOTION_DATA_SOURCE=      # paste the database link
 SITE_URL=https://www.example.com
 ```
 
-**5. Deploy.** Any Node.js host works: `npm run build && npm start`. On Vercel, import the repository and add the same variables; `SITE_URL` defaults to your production domain there.
+**5. Deploy.** Any Node.js host works: `npm run build && npm start`. On Vercel, use the Deploy button at the top or import the repository, and add the same variables; `SITE_URL` defaults to your production domain there.
 
 ## Instant publishing
 
@@ -102,7 +111,13 @@ Paragraphs with bold, italic, code, strikethrough, underline and links; headings
 
 Headings shift down one level, so the post title stays the only `h1`. Anything unsupported is left out of the page, kept as an HTML comment and reported by the content check, so it never disappears silently. Links to other published posts become links to their pages on your site; links to any other page of your workspace are removed, so private workspace URLs never reach the public HTML.
 
-Not supported yet: videos, PDFs and audio uploaded to Notion (link to an external host instead), and equation rendering.
+## What it does not do
+
+- **It does not copy Notion's look.** Posts take your site's design; the template ships a neutral one.
+- **It only reads.** Notion is the source and the site never writes back to it.
+- **Some content stays in Notion.** Videos, PDFs and audio uploaded to Notion are left out (link to an external host instead), and equations show as source text. The content check reports each one. Sub-pages and databases inside a post are workspace navigation, so they are skipped.
+- **It is not a hosted service.** You deploy the site yourself, on Vercel or any Node.js host.
+- **It is wired for Next.js.** The core has no framework code, but the template and its caching are Next.js.
 
 ## Content checks
 
