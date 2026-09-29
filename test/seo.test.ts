@@ -5,6 +5,7 @@ import { rssFeed } from '../src/lib/notion/feed';
 import { llmsTxt } from '../src/lib/notion/llms';
 import type { Post } from '../src/lib/notion/posts';
 import { blogJsonLd, postJsonLd, postMetadata, postUrl, serializeJsonLd } from '../src/lib/notion/seo';
+import { sitemapEntries, sitemapXml } from '../src/lib/notion/sitemap';
 
 const config = defineBlogConfig({ siteUrl: 'https://www.example.com/', siteName: 'Example', basePath: 'blog/' });
 
@@ -129,5 +130,23 @@ describe('llmsTxt', () => {
         '',
       ].join('\n'),
     );
+  });
+});
+
+describe('sitemap', () => {
+  it('lists home, the index and posts, leaving out posts canonical elsewhere', () => {
+    const entries = sitemapEntries(config, [post, { ...post, slug: 'elsewhere', canonicalUrl: 'https://medium.example/p/1' }]);
+    assert.deepEqual(
+      entries.map((e) => e.url),
+      ['https://www.example.com/', 'https://www.example.com/blog', 'https://www.example.com/blog/hello-world'],
+    );
+    assert.equal(entries[1]?.lastModified, post.updatedAt);
+  });
+
+  it('writes valid, escaped XML with ISO dates', () => {
+    const out = sitemapXml([{ url: 'https://www.example.com/a?x=1&y=2', lastModified: '2026-09-01' }, { url: 'https://www.example.com/b' }]);
+    assert.match(out, /^<\?xml version="1.0" encoding="UTF-8"\?>\n<urlset xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9">/);
+    assert.match(out, /<loc>https:\/\/www\.example\.com\/a\?x=1&amp;y=2<\/loc><lastmod>2026-09-01T00:00:00.000Z<\/lastmod>/);
+    assert.match(out, /<url><loc>https:\/\/www\.example\.com\/b<\/loc><\/url>/);
   });
 });

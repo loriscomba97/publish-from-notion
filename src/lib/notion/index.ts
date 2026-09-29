@@ -35,6 +35,8 @@ export { absoluteUrl, blogJsonLd, postJsonLd, postMetadata, postPath, postUrl, s
 export type { PostMetadata, Publisher } from './seo';
 
 export { rssFeed } from './feed';
+export { sitemapEntries, sitemapXml } from './sitemap';
+export type { SitemapEntry } from './sitemap';
 export { llmsTxt } from './llms';
 export type { LlmsLink, LlmsSection } from './llms';
 
