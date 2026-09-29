@@ -17,7 +17,7 @@
 - **Ready for search engines and AI assistants.** Metadata, canonical URLs, one JSON-LD graph per post, FAQ structured data built from your own FAQ section, a sitemap, an RSS feed and llms.txt, all from the same post.
 - **Zero runtime dependencies.** The core is one folder of TypeScript, [`src/lib/notion`](src/lib/notion), with over a hundred tests on Node's built-in test runner.
 
-Not affiliated with Notion Labs, Inc.
+Used in production by the [Forte](https://www.forte-ai.com/blog) blog. Not affiliated with Notion Labs, Inc.
 
 ## Try it in a minute
 
@@ -79,9 +79,11 @@ Without any setup, every page refreshes on its own once an hour. To publish with
 | | Database automation | Connection webhook |
 |---|---|---|
 | Needs Notion automations | Yes (paid plans) | No |
-| Speed | About 3 seconds | Usually within a minute |
+| Speed | A few seconds | Usually within a minute |
 | Fires on | The property you choose, e.g. Published | Any change, including edits to the text |
 | Security | Shared secret in a header | Every event signed by Notion |
+
+Notion runs database automations over a three-second window. Connection webhooks group changes before sending them, so they take longer; on the free plan we measured about a minute from the edit to the updated page.
 
 Both call the same endpoint, `https://your-site/api/notion-webhook`, and both are refused unless their environment variable is set. If your host challenges bots (a firewall "challenge" or "attack" mode), keep that path out of it: Notion's servers cannot pass a browser challenge, so the events would never arrive.
 
@@ -132,7 +134,18 @@ Missing descriptions, overlong titles and covers without alt text are warnings. 
 
 ## Add it to an existing Next.js site
 
-Copy [`src/lib/notion`](src/lib/notion) (the core, no dependencies), [`src/lib/blog.ts`](src/lib/blog.ts) (the Next.js wiring), [`src/blog.config.ts`](src/blog.config.ts) and the routes you want from [`src/app`](src/app): `blog`, `notion-image`, `api/notion-webhook`, and optionally the sitemap, robots, feed and `llms.txt`. The template targets Next.js 16; on older versions, call `revalidateTag(tag)` with one argument in the webhook route. The core type-checks with a TypeScript `target` of ES2017 or later, the default in new Next.js projects.
+Copy these into your project at the same paths under `src/`; the imports use the `@/*` alias for `src/*`.
+
+- [`src/lib/notion`](src/lib/notion): the core, with no dependencies. Leave it unchanged: everything specific to your site goes in the config.
+- [`src/blog.config.ts`](src/blog.config.ts): your property names, publish rule and site details.
+- [`src/lib/blog.ts`](src/lib/blog.ts) and [`src/lib/demo`](src/lib/demo): the Next.js wiring, and the demo content it falls back to. To drop the demo, remove the `DEMO` branches from `blog.ts`.
+- [`src/components`](src/components): the post card, the JSON-LD tag and the setup notice that the pages use.
+- The routes you want from [`src/app`](src/app): `blog` (index, posts and feed), `notion-image`, `api/notion-webhook`, and optionally `sitemap.xml`, `robots.ts` and `llms.txt`. If your site already has a sitemap or robots file, merge the entries instead.
+- The article styles: the "Article body" section of [`src/app/globals.css`](src/app/globals.css), adapted to your design.
+
+The template targets Next.js 16. On older versions, call `revalidateTag(tag)` with one argument in the webhook route, and on Next.js 14 read route `params` without awaiting them: that is how the core, the webhook and the image route run in production on Next.js 14. The core type-checks with a TypeScript `target` of ES2017 or later, the default in new Next.js projects.
+
+Using a coding agent? [AGENTS.md](AGENTS.md) walks it through the same steps.
 
 ## Security
 
