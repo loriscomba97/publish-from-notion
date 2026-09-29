@@ -1,4 +1,5 @@
 import type { NotionBlock, NotionPage, RichText } from '../notion/types';
+import { DEMO_SOURCES } from './sources';
 
 /**
  * A small, in-memory stand-in for the Notion API, so the template runs before Notion is
@@ -56,6 +57,7 @@ function pageOf(row: DemoRow): NotionPage {
     created_time: `${row.date}T08:00:00.000Z`,
     last_edited_time: EDITED,
     cover: { type: 'file', file: { url: fileUrl(row.cover) } },
+    parent: { type: 'data_source_id', data_source_id: DEMO_SOURCES.blog },
     properties: {
       Name: { id: 'title', type: 'title', title: [t(row.title)] },
       Slug: text(row.slug, 'slug'),
@@ -235,8 +237,179 @@ export const demoBodies: Record<string, DemoNode[]> = {
   [ids.draft]: [p(t('If you can read this on the site, the publish filter is broken.'))],
 };
 
+// Customer stories: a second collection. The companies and people are invented for the demo.
+export type DemoStory = {
+  id: string;
+  title: string;
+  slug: string;
+  date: string;
+  excerpt: string;
+  customer: string;
+  role: string;
+  company: string;
+  quote: string;
+  featured: boolean;
+  cover: string;
+  coverAlt: string;
+  avatar: string;
+};
+
+function storyPage(row: DemoStory): NotionPage {
+  const text = (value: string, id: string) => ({ id, type: 'rich_text', rich_text: value ? [t(value)] : [] });
+  return {
+    object: 'page',
+    id: row.id,
+    created_time: `${row.date}T08:00:00.000Z`,
+    last_edited_time: EDITED,
+    cover: { type: 'file', file: { url: fileUrl(row.cover) } },
+    parent: { type: 'data_source_id', data_source_id: DEMO_SOURCES.stories },
+    properties: {
+      Name: { id: 'title', type: 'title', title: [t(row.title)] },
+      Slug: text(row.slug, 'slug'),
+      Published: { id: 'pub', type: 'checkbox', checkbox: true },
+      'Published date': { id: 'date', type: 'date', date: { start: row.date, end: null } },
+      Excerpt: text(row.excerpt, 'exc'),
+      Customer: text(row.customer, 'cus'),
+      Role: text(row.role, 'rol'),
+      Company: text(row.company, 'com'),
+      'Pull quote': text(row.quote, 'quo'),
+      Featured: { id: 'fea', type: 'checkbox', checkbox: row.featured },
+      'Cover alt': text(row.coverAlt, 'alt'),
+      Avatar: { id: 'ava', type: 'files', files: [{ type: 'file', name: row.avatar, file: { url: fileUrl(row.avatar) } }] },
+    },
+  };
+}
+
+const storyIds = { studio: nextId(), newsletter: nextId() };
+
+export const demoStories: DemoStory[] = [
+  {
+    id: storyIds.studio,
+    title: 'A design studio publishes its case studies from Notion',
+    slug: 'design-studio-case-studies',
+    date: '2026-09-18',
+    excerpt: 'How a four-person studio keeps every case study in one Notion database, and ships each one with a single checkbox.',
+    customer: 'Mara Ellis',
+    role: 'Studio lead',
+    company: 'Northwind Studio',
+    quote: 'We write the story where we already plan the work, and it goes live before the call ends.',
+    featured: true,
+    cover: 'cover-studio.svg',
+    coverAlt: 'Overlapping orange and violet shapes on a pale background.',
+    avatar: 'avatar-mara.svg',
+  },
+  {
+    id: storyIds.newsletter,
+    title: 'A newsletter keeps its archive on its own domain',
+    slug: 'newsletter-archive',
+    date: '2026-09-10',
+    excerpt: 'A weekly newsletter moved years of issues onto its own site without changing how the team writes.',
+    customer: 'Theo Brandt',
+    role: 'Editor',
+    company: 'Fieldnote Weekly',
+    quote: 'Our archive finally lives on our own site, and nothing about how we write had to change.',
+    featured: false,
+    cover: 'cover-newsletter.svg',
+    coverAlt: 'Soft green circles and a dark square on a mint background.',
+    avatar: 'avatar-theo.svg',
+  },
+];
+
+export const demoStoryBodies: Record<string, DemoNode[]> = {
+  [storyIds.studio]: [
+    p(t('Northwind Studio is an invented company: this story shows what a case study looks like when it is written in Notion and published with the kit.')),
+    h(1, 'The problem'),
+    p(t('Case studies lived in slide decks and shared drives. Getting one onto the website meant a developer, a pull request and a week of waiting.')),
+    h(1, 'What changed'),
+    li('Every case study is a page in one Notion database, with the client, the role and a pull quote as properties.'),
+    li('Ticking Published puts it on the site, with its own URL, metadata and structured data.'),
+    li([t('Featured stories are listed first, set with one more checkbox. Links to blog posts, like '), mention('Your CMS is a checkbox', ids.checkbox), t(', become links on the site.')]),
+    quote('The best case study is the one that gets published while the project is still fresh.'),
+  ],
+  [storyIds.newsletter]: [
+    p(t('Fieldnote Weekly is an invented newsletter. Its story shows the second layout a collection can take: a short case study with a quote up front.')),
+    h(1, 'The archive'),
+    p(t('Each issue is a Notion page. The archive on the site is the same database, filtered by the Published checkbox, so drafts never leave Notion.')),
+    callout('💡', 'A story page is a post with a few more properties: customer, role, company, pull quote and avatar. Everything else works the same way.'),
+  ],
+};
+
+// The changelog: the kit's own releases.
+export type DemoRelease = { id: string; name: string; version: string; date: string; summary: string; changes: Partial<Record<'New' | 'Improved' | 'Fixed', string[]>> };
+
+function releasePage(row: DemoRelease): NotionPage {
+  const text = (value: string, id: string) => ({ id, type: 'rich_text', rich_text: value ? [t(value)] : [] });
+  return {
+    object: 'page',
+    id: row.id,
+    created_time: `${row.date}T08:00:00.000Z`,
+    last_edited_time: EDITED,
+    cover: null,
+    parent: { type: 'data_source_id', data_source_id: DEMO_SOURCES.changelog },
+    properties: {
+      Name: { id: 'title', type: 'title', title: [t(row.name)] },
+      Version: text(row.version, 'ver'),
+      'Release date': { id: 'date', type: 'date', date: { start: row.date, end: null } },
+      Summary: text(row.summary, 'sum'),
+      New: text((row.changes.New ?? []).join('\n'), 'new'),
+      Improved: text((row.changes.Improved ?? []).join('\n'), 'imp'),
+      Fixed: text((row.changes.Fixed ?? []).join('\n'), 'fix'),
+      Published: { id: 'pub', type: 'checkbox', checkbox: true },
+    },
+  };
+}
+
+const releaseIds = { v11: nextId(), v10: nextId() };
+
+export const demoReleases: DemoRelease[] = [
+  {
+    id: releaseIds.v11,
+    name: 'Changelog and customer stories',
+    version: '1.1.0',
+    date: '2026-09-30',
+    summary: 'Two new collections next to the blog: a changelog and customer stories, both written in Notion.',
+    changes: {
+      New: [
+        'A changelog from a Notion database: one row per release, with anchors and its own RSS feed.',
+        'Customer stories: a second collection of articles with customer, role, company, pull quote and photo.',
+        'Featured entries listed first, extra image properties, and links between collections.',
+      ],
+      Improved: [
+        'Structured data follows the collection: Article for case studies, BlogPosting for posts.',
+        'The content check covers every collection before a build.',
+      ],
+    },
+  },
+  {
+    id: releaseIds.v10,
+    name: 'First public release',
+    version: '1.0.0',
+    date: '2026-09-29',
+    summary: 'Publish posts from a Notion database to your own Next.js site with one checkbox.',
+    changes: {
+      New: [
+        'Posts from a Notion database behind a Published checkbox, on the official API.',
+        'Instant publishing through Notion automations or signed connection webhooks.',
+        'Images uploaded to Notion served from signed URLs that never expire.',
+        'Metadata, JSON-LD, FAQ structured data, sitemap, RSS and llms.txt from every post.',
+      ],
+    },
+  },
+];
+
+export const demoReleaseBodies: Record<string, DemoNode[]> = {
+  [releaseIds.v11]: [
+    p(t('Short changes go in the New, Improved and Fixed properties, one per line. Longer notes, screenshots and code go in the page, like this paragraph.')),
+    code('typescript', "export const changelog = defineChangelogConfig({\n  dataSource: process.env.NOTION_CHANGELOG_DATA_SOURCE,\n  basePath: '/changelog',\n});"),
+  ],
+};
+
 // Index everything the API can be asked for. Exported so the local mock server can edit posts.
-export const pages = new Map(demoRows.map((row) => [row.id, pageOf(row)]));
+export const pages = new Map<string, NotionPage>([
+  ...demoRows.map((row) => [row.id, pageOf(row)] as const),
+  ...demoStories.map((row) => [row.id, storyPage(row)] as const),
+  ...demoReleases.map((row) => [row.id, releasePage(row)] as const),
+]);
 const blocks = new Map<string, NotionBlock>();
 const children = new Map<string, NotionBlock[]>();
 function index(parentId: string, nodes: DemoNode[]) {
@@ -246,7 +419,7 @@ function index(parentId: string, nodes: DemoNode[]) {
     if (n.children.length) index(n.block.id, n.children);
   }
 }
-for (const [pageId, nodes] of Object.entries(demoBodies)) index(pageId, nodes);
+for (const [pageId, nodes] of Object.entries({ ...demoBodies, ...demoStoryBodies, ...demoReleaseBodies })) index(pageId, nodes);
 
 // Covers and images, drawn in code: no files to license, nothing fetched from the internet.
 const PALETTES: Record<string, [string, string, string, string]> = {
@@ -255,9 +428,22 @@ const PALETTES: Record<string, [string, string, string, string]> = {
   'cover-blocks.svg': ['#f3f0fa', '#e8b94a', '#7b61c9', '#3d6fd6'],
   'cover-search.svg': ['#1b1830', '#8f6ef0', '#f39a52', '#f4eee6'],
   'diagram.svg': ['#f7f6f2', '#2b59c3', '#ef7a5a', '#6d6a63'],
+  'cover-studio.svg': ['#faf3ec', '#e8793c', '#8d6ae6', '#2a2522'],
+  'cover-newsletter.svg': ['#e8f4ef', '#3aa37e', '#9ad8c0', '#1f3b33'],
+};
+
+/** Round portraits with initials, for the demo customer stories. */
+const AVATARS: Record<string, [initials: string, bg: string, fg: string]> = {
+  'avatar-mara.svg': ['ME', '#e8793c', '#fff8f1'],
+  'avatar-theo.svg': ['TB', '#3aa37e', '#f1fbf6'],
 };
 
 export function demoSvg(name: string): string | null {
+  const avatar = AVATARS[name];
+  if (avatar) {
+    const [initials, bg, fg] = avatar;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"><rect width="240" height="240" rx="120" fill="${bg}"/><text x="120" y="146" text-anchor="middle" font-family="system-ui, sans-serif" font-size="84" font-weight="700" fill="${fg}">${initials}</text></svg>`;
+  }
   const colors = PALETTES[name];
   if (!colors) return null;
   const [bg, a, c, d] = colors;
@@ -287,9 +473,12 @@ export async function demoFetch(input: RequestInfo | URL, init?: RequestInit): P
   const id = (value: string | undefined) => (value ?? '').toLowerCase();
   let match: RegExpMatchArray | null;
 
-  if (method === 'POST' && /^\/data_sources\/[^/]+\/query$/.test(path)) {
+  if (method === 'POST' && (match = path.match(/^\/data_sources\/([^/]+)\/query$/))) {
     const filter = (JSON.parse(String(init?.body ?? '{}')) as { filter?: Filter }).filter;
+    const source = id(match[1]).replace(/-/g, '');
     const results = [...pages.values()].filter((page) => {
+      const parent = page.parent?.type === 'data_source_id' ? page.parent.data_source_id : '';
+      if (parent.replace(/-/g, '').toLowerCase() !== source) return false;
       if (!filter?.property || filter.checkbox?.equals === undefined) return true;
       const value = page.properties[filter.property];
       return value?.type === 'checkbox' && value.checkbox === filter.checkbox.equals;

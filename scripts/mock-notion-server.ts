@@ -4,6 +4,8 @@
  *
  *   node --import ./scripts/register.mjs scripts/mock-notion-server.ts
  *   NOTION_API_URL=http://127.0.0.1:4010/v1 NOTION_TOKEN=anything NOTION_DATA_SOURCE=de000000-0000-4000-8000-000000000000
+ *   and, for the optional collections, NOTION_STORIES_DATA_SOURCE=de000000-0000-4000-8000-000000000100
+ *   NOTION_CHANGELOG_DATA_SOURCE=de000000-0000-4000-8000-000000000200
  *
  * Edit a post the way an editor would in Notion, then call the webhook and watch it change:
  *   curl -X POST localhost:4010/__mock/edit -d '{"slug":"instant-publishing","title":"New title"}'

@@ -1,6 +1,21 @@
 import { cache } from 'react';
-import { blog } from '../blog.config';
-import { coverAltText, createNotionClient, imageSourceUrl, loadArticle, queryPosts, TAGS, type Post } from './notion';
+import { blog, changelog, stories } from '../blog.config';
+import { DEMO_SOURCES } from './demo/sources';
+import {
+  coverAltText,
+  createNotionClient,
+  imageSourceUrl,
+  loadArticle,
+  loadReleaseNotes,
+  queryPosts,
+  queryReleases,
+  TAGS,
+  type ImageSource,
+  type LinkTarget,
+  type Post,
+  type Release,
+  type ReleaseNotes,
+} from './notion';
 
 /**
  * The Next.js side of the kit: one Notion client wired to Next's data cache, and loaders that
@@ -25,7 +40,13 @@ export const INDEXABLE = !DEMO && (process.env.SITE_INDEXABLE
 
 const demoFetch: typeof fetch = async (input, init) => (await import('./demo/notion')).demoFetch(input, init);
 
-export const config = DEMO ? { ...blog, dataSource: 'de000000-0000-4000-8000-000000000000' } : blog;
+export const config = DEMO ? { ...blog, dataSource: DEMO_SOURCES.blog } : blog;
+export const storiesConfig = DEMO ? { ...stories, dataSource: DEMO_SOURCES.stories } : stories;
+export const changelogConfig = DEMO ? { ...changelog, dataSource: DEMO_SOURCES.changelog } : changelog;
+
+/** Customer stories and the changelog are optional: each is on once its database is set. */
+export const STORIES_ON = Boolean(storiesConfig.dataSource);
+export const CHANGELOG_ON = Boolean(changelogConfig.dataSource);
 
 export const notion = createNotionClient({
   token: DEMO ? 'demo' : process.env.NOTION_TOKEN,
@@ -40,6 +61,14 @@ export const notion = createNotionClient({
 /** RSS link for every page head. Pages that set their own `alternates` must repeat it: Next does not merge them. */
 export const FEED_ALTERNATE = { 'application/rss+xml': [{ url: `${config.basePath}/feed.xml`, title: `${config.siteName} RSS feed` }] };
 
+/** The changelog page also offers its own feed of releases. */
+export const CHANGELOG_FEED_ALTERNATE = {
+  'application/rss+xml': [
+    { url: `${changelogConfig.basePath}/feed.xml`, title: `${changelogConfig.label} | ${config.siteName}` },
+    ...FEED_ALTERNATE['application/rss+xml'],
+  ],
+};
+
 /** Signs image URLs. Falls back to the Notion token, so it works with no extra setup. */
 export const IMAGE_KEY = DEMO ? 'demo-image-key' : process.env.NOTION_IMAGE_KEY || process.env.NOTION_TOKEN || '';
 
@@ -48,10 +77,58 @@ export const filesFetch: typeof fetch | undefined = DEMO ? demoFetch : undefined
 
 export const getBlog = cache(() => queryPosts(notion, config));
 export const getPosts = cache(async () => (await getBlog()).posts);
-export const getArticle = cache(async (post: Post) => loadArticle(notion, config, post, { imageKey: IMAGE_KEY, posts: await getPosts() }));
+
+export const getStoriesList = cache(() => (STORIES_ON ? queryPosts(notion, storiesConfig) : Promise.resolve({ posts: [] as Post[], skipped: [] })));
+export const getStories = cache(async () => (await getStoriesList()).posts);
+
+export const getChangelog = cache(() => (CHANGELOG_ON ? queryReleases(notion, changelogConfig) : Promise.resolve({ releases: [] as Release[], skipped: [] })));
+export const getReleases = cache(async () => (await getChangelog()).releases);
+
+/** Every post and story, so a link from one collection to another becomes a link on the site. */
+export const getLinkTargets = cache(async (): Promise<LinkTarget[]> => [
+  ...(await getPosts()).map((post) => ({ id: post.id, href: `${config.basePath}/${post.slug}`, title: post.title })),
+  ...(await getStories()).map((story) => ({ id: story.id, href: `${storiesConfig.basePath}/${story.slug}`, title: story.title })),
+]);
+
+export const getArticle = cache(async (post: Post) =>
+  loadArticle(notion, config, post, { imageKey: IMAGE_KEY, posts: await getPosts(), links: await getLinkTargets() }),
+);
+
+export const getStoryArticle = cache(async (story: Post) =>
+  loadArticle(notion, storiesConfig, story, { imageKey: IMAGE_KEY, posts: await getStories(), links: await getLinkTargets() }),
+);
+
+/**
+ * Every release with its rendered page content (null when the page is empty or bodies are off).
+ * Rendered in order so heading ids stay unique across the one changelog page.
+ */
+export const getReleaseEntries = cache(async (): Promise<Array<{ release: Release; notes: ReleaseNotes | null }>> => {
+  const releases = await getReleases();
+  if (!changelogConfig.body) return releases.map((release) => ({ release, notes: null }));
+  const targets = new Map((await getLinkTargets()).map((link) => [link.id.replace(/-/g, ''), link]));
+  const used = releases.map((release) => release.anchor);
+  const entries: Array<{ release: Release; notes: ReleaseNotes | null }> = [];
+  for (const release of releases) {
+    const notes = await loadReleaseNotes(notion, changelogConfig, release, {
+      imageKey: IMAGE_KEY,
+      usedIds: used,
+      resolvePage: (pageId) => {
+        const target = targets.get(pageId.replace(/-/g, ''));
+        return target ? { href: target.href, title: target.title } : null;
+      },
+    });
+    used.push(...notes.headingIds);
+    entries.push({ release, notes: notes.html.trim() ? notes : null });
+  }
+  return entries;
+});
+
+export function imageUrl(source: ImageSource | null | undefined): Promise<string | null> {
+  return imageSourceUrl(source ?? null, { key: IMAGE_KEY, basePath: config.imagePath });
+}
 
 export function coverUrl(post: Post): Promise<string | null> {
-  return imageSourceUrl(post.cover, { key: IMAGE_KEY, basePath: config.imagePath });
+  return imageUrl(post.cover);
 }
 
 export { coverAltText };

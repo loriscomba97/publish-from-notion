@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { config, DEMO, FEED_ALTERNATE, INDEXABLE } from '@/lib/blog';
+import { CHANGELOG_ON, changelogConfig, config, DEMO, FEED_ALTERNATE, INDEXABLE, STORIES_ON, storiesConfig } from '@/lib/blog';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,6 +34,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
             <nav aria-label="Main">
               <Link href={config.basePath}>Blog</Link>
+              {STORIES_ON && <Link href={storiesConfig.basePath}>Customers</Link>}
+              {CHANGELOG_ON && <Link href={changelogConfig.basePath}>Changelog</Link>}
               <a href={`${config.basePath}/feed.xml`}>RSS</a>
             </nav>
           </div>
@@ -47,7 +49,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               Written in Notion, published with <a href="https://github.com/loriscomba97/publish-from-notion">publish-from-notion</a>.
             </p>
             <p>
-              <a href={`${config.basePath}/feed.xml`}>RSS</a> · <a href="/sitemap.xml">Sitemap</a> · <a href="/llms.txt">llms.txt</a>
+              <a href={`${config.basePath}/feed.xml`}>RSS</a>
+              {CHANGELOG_ON && (
+                <>
+                  {' · '}
+                  <a href={`${changelogConfig.basePath}/feed.xml`}>Releases RSS</a>
+                </>
+              )}
+              {' · '}
+              <a href="/sitemap.xml">Sitemap</a> · <a href="/llms.txt">llms.txt</a>
             </p>
           </div>
         </footer>
