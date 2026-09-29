@@ -113,10 +113,17 @@ export async function queryPosts(client: NotionClient, config: BlogConfig): Prom
   const rows = await client.queryDataSource(config.dataSource, { filter: publishFilter(config.publish) }, { tags: [TAGS.posts] });
 
   // Sorted here rather than by the API, so a missing date property never breaks the query.
+  // Posts sharing a date keep Notion's own order: the most recently created page first.
   const mapped = rows
     .filter((row) => row.object === 'page' && !row.in_trash)
-    .map((row) => mapPost(row, config))
-    .sort((a, b) => time(b.publishedAt) - time(a.publishedAt) || a.id.localeCompare(b.id));
+    .map((row) => ({ row, post: mapPost(row, config) }))
+    .sort(
+      (a, b) =>
+        time(b.post.publishedAt) - time(a.post.publishedAt) ||
+        time(b.row.created_time) - time(a.row.created_time) ||
+        a.post.id.localeCompare(b.post.id),
+    )
+    .map(({ post }) => post);
 
   const posts: Post[] = [];
   const skipped: SkippedRow[] = [];

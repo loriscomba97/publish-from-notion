@@ -64,6 +64,15 @@ describe('queryPosts', () => {
     assert.deepEqual(posts.map((p) => p.slug), ['new', 'mid', 'old']);
   });
 
+  it('orders posts sharing a date like Notion does: the most recently created page first', async () => {
+    const older = postRow({ slug: 'created-first', date: '2026-06-04' });
+    older.created_time = '2026-06-20T14:19:00.000Z';
+    const newer = postRow({ slug: 'created-second', date: '2026-06-04' });
+    newer.created_time = '2026-06-21T12:05:00.000Z';
+    const { posts } = await queryPosts(mockClient({ rows: [older, newer] }), config);
+    assert.deepEqual(posts.map((p) => p.slug), ['created-second', 'created-first']);
+  });
+
   it('reports published rows that cannot go online instead of dropping them silently', async () => {
     const rows = [
       postRow({ title: 'Newer duplicate', slug: 'same', date: '2026-09-02' }),
