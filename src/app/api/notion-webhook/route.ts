@@ -8,6 +8,7 @@ import { handleNotionWebhook, webhookResponse } from '@/lib/notion';
  */
 export async function POST(request: Request) {
   const outcome = await handleNotionWebhook(request, {
+    allowVerificationLogs: process.env.NOTION_WEBHOOK_SETUP === '1',
     automationSecret: process.env.NOTION_AUTOMATION_SECRET,
     verificationToken: process.env.NOTION_WEBHOOK_VERIFICATION_TOKEN,
   });

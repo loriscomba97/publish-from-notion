@@ -27,7 +27,8 @@ export async function fetchBlockTree(
   }
 
   async function childrenOf(block: NotionBlock, depth: number): Promise<BlockNode[]> {
-    if (!block.has_children || OUTSIDE_ARTICLE.has(block.type) || depth + 1 >= maxDepth) return [];
+    if (!block.has_children || OUTSIDE_ARTICLE.has(block.type)) return [];
+    if (depth + 1 >= maxDepth) throw new Error('Article nesting exceeds the supported depth. Simplify the nested blocks.');
     const original = block.type === 'synced_block' ? (block.synced_block as SyncedPayload).synced_from?.block_id : undefined;
     if (!original) return level(block.id, depth + 1);
     try {

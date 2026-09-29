@@ -2,7 +2,7 @@ import { defineBlogConfig } from './lib/notion';
 
 /**
  * Your blog in one place. Property names must match your Notion database exactly
- * (see the README for the full list and their defaults).
+ * (see docs/setup.md for the full list and their defaults).
  *
  * Secrets never go in this file: they live in environment variables (see .env.example).
  */

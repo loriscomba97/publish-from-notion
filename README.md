@@ -1,171 +1,73 @@
 # Publish from Notion
 
+**Your CMS is a checkbox.**
+
+Write and edit in Notion. Keep your site’s design, URLs and hosting. This kit connects the two through the official Notion API, without making your database public.
+
+[Live demo](https://publish-from-notion.vercel.app/blog) · [Get started](#get-started) · [Docs](docs/setup.md) · [Issues](https://github.com/loriscomba97/publish-from-notion/issues)
+
 [![CI](https://github.com/loriscomba97/publish-from-notion/actions/workflows/ci.yml/badge.svg)](https://github.com/loriscomba97/publish-from-notion/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js 22.18+](https://img.shields.io/badge/node-22.18%2B-339933.svg)](https://nodejs.org)
-[![Core dependencies: 0](https://img.shields.io/badge/core%20dependencies-0-brightgreen.svg)](src/lib/notion)
+[![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Your CMS is a checkbox.** Write in Notion, tick *Published*, and the post is live on your own Next.js site, with the SEO already done. With a Notion automation, it takes a few seconds.
+![A post is ticked Published in Notion and appears on the demo site 39 seconds later in this recording, on the free Notion plan](docs/demo.gif)
 
-**[Live demo](https://publish-from-notion.vercel.app)** · [Connect Notion](#connect-notion) · [Instant publishing](#instant-publishing) · [What it does not do](#what-it-does-not-do)
+*39 seconds in this recording, on the Free Notion plan with connection webhooks. The wait is accelerated in the GIF; delivery times vary.*
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion&env=NOTION_TOKEN,NOTION_DATA_SOURCE&envDescription=The%20API%20token%20of%20your%20Notion%20connection%20and%20the%20link%20to%20your%20blog%20database&envLink=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion%23connect-notion&project-name=notion-blog&repository-name=notion-blog)
+## See it in action
 
-- **Official Notion API, private drafts.** No session cookie, nothing shared to the web. Built on Notion API version 2025-09-03 (data sources).
-- **Instant publishing.** A Notion automation or a signed connection webhook purges exactly the post that changed. An hourly refresh is the safety net.
-- **Images that never expire.** Files uploaded to Notion are served through your site from signed URLs that can be cached for a year.
-- **Ready for search engines and AI assistants.** Metadata, canonical URLs, one JSON-LD graph per post, FAQ structured data built from your own FAQ section, a sitemap, an RSS feed and llms.txt, all from the same post.
-- **Zero runtime dependencies.** The core is one folder of TypeScript, [`src/lib/notion`](src/lib/notion), with over a hundred tests on Node's built-in test runner.
+Open [Every block, rendered](https://publish-from-notion.vercel.app/blog/every-block-rendered) to see an article with headings, lists, tables, toggles and images. Connect your own database to try publishing.
 
-Used in production by the [Forte](https://www.forte-ai.com/blog) blog. Not affiliated with Notion Labs, Inc.
+## Get started
 
-## Try it in a minute
+Requires Git and Node.js 22.18 or later. Start with the local demo; you do not need a Notion account or token for this step.
 
 ```bash
 git clone https://github.com/loriscomba97/publish-from-notion.git
 cd publish-from-notion
-npm install
+npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Until you connect Notion, the site shows built-in demo posts, which also show every block the kit renders. Requires Node.js 22.18 or later.
+Open [localhost:3000](http://localhost:3000), choose **All posts**, and open an article. You should see built-in sample content, including a page demonstrating the supported blocks.
 
 ## Connect Notion
 
-**1. Create the database.** Create a Notion database for your posts with these properties. Only the first three are required; the names are the defaults and can be changed in [`src/blog.config.ts`](src/blog.config.ts).
+Create a database with `Name` (title), `Slug` (text) and `Published` (checkbox). Create a read-only internal connection in Notion and give it access to that database.
 
-| Property | Type | What it does |
-|---|---|---|
-| `Name` | Title | The post title, shown as the page's heading |
-| `Slug` | Text | The URL: `my-first-post` becomes `/blog/my-first-post`. Set it once and never change it after publishing |
-| `Published` | Checkbox | Ticked means live. Unticked rows never leave Notion |
-| `Published date` | Date | Shown on the post and used for sorting. Defaults to the page's creation date |
-| `Last updated` | Date | Used for `dateModified` and the sitemap |
-| `Excerpt` | Text | The summary on cards, in the feed and as the default description |
-| `SEO title` | Text | Replaces the title in search results |
-| `Meta description` | Text | Replaces the excerpt in search results. Keep it under 160 characters |
-| `Canonical URL` | URL | Only for posts first published elsewhere |
-| `Category` | Select | Shown on cards, used to pick related posts |
-| `Tags` | Multi-select | Keywords, also used to pick related posts |
-| `Author` | Text, select or person | The byline |
-| `Cover` | Files or URL | The cover image. Falls back to the page's own cover |
-| `Cover alt` | Text | A plain description of the cover. Empty means decorative |
-| `AI image` | Checkbox | The cover was generated by AI; the alt text then says so |
+Copy `.env.example` to `.env.local`. Fill in `NOTION_TOKEN` and `NOTION_DATA_SOURCE`; keep the local `SITE_URL` for development. Restart the server. Add a page with a title, a slug such as `hello-from-notion`, some text and Published checked. Open `/blog/hello-from-notion` to read it on your site.
 
-The post itself is the page's content: write it in Notion as usual.
+The [setup guide](docs/setup.md) covers every field, permissions and the optional database setup command. It also explains where to put secrets when deploying.
 
-Existing databases rarely match these names exactly, so the config also takes a list of cover properties tried in order (`cover: ['Cover', 'Old cover']`) and extra properties read as text (`extra: { product: 'Product' }` gives `post.extra.product`).
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion&env=NOTION_TOKEN,NOTION_DATA_SOURCE&envDescription=The%20API%20token%20of%20your%20Notion%20connection%20and%20the%20link%20to%20your%20blog%20database&envLink=https%3A%2F%2Fgithub.com%2Floriscomba97%2Fpublish-from-notion%23connect-notion&project-name=notion-blog&repository-name=notion-blog)
 
-Or let the kit add the properties for you: after steps 2 to 4, give the connection *Update content* and *Insert content* for a moment and run `npm run notion:setup`. Add `-- --demo` to also create the demo posts, with covers and images uploaded to Notion. Then take the extra capabilities away again: the site only reads.
+## What it does
 
-**2. Create a connection.** In Notion's [Developer portal](https://app.notion.com/developers/connections), under Build, open Internal connections and create a new connection for your workspace (you need to be a workspace owner). In its Configuration tab, keep only **Read content** under Capabilities, then copy the **API token** from the Integration token section.
-
-**3. Give it access to the database.** In the connection's Content access tab, choose Edit access and select the database. Or, in Notion, open the database, then the ••• menu, Connections, Add connection. Without this step, Notion answers every request with "not found".
-
-**4. Set the environment variables.** Copy [`.env.example`](.env.example) to `.env.local` and fill in:
-
-```bash
-NOTION_TOKEN=            # the API token of the connection
-NOTION_DATA_SOURCE=      # paste the database link
-SITE_URL=https://www.example.com
-```
-
-**5. Deploy.** Any Node.js host works: `npm run build && npm start`. On Vercel, use the Deploy button at the top or import the repository, and add the same variables; `SITE_URL` defaults to your production domain there.
+- **Use Notion as your editor.** The website selects published rows and renders their blocks as HTML. Your database can stay private, and the API token stays on the server.
+- **Update without rebuilding.** Signed connection webhooks notify the website about page edits. The receiving route invalidates cached data so later requests can render the update.
+- **Produce a complete blog.** Article pages include metadata and structured data. The template also generates a sitemap, RSS and a text index at `llms.txt`. Uploaded images are served through signed paths on your domain.
 
 ## Instant publishing
 
-Without any setup, every page refreshes on its own once an hour. To publish within seconds, let Notion call your site. Use one or both of these:
+Connection webhooks work with the Free Notion plan tested during development. They arrive asynchronously, including for text edits. Paid plans can also use a database automation. Neither path promises a fixed delivery time.
 
-| | Database automation | Connection webhook |
-|---|---|---|
-| Needs Notion automations | Yes (paid plans) | No |
-| Speed | A few seconds | Usually within a minute |
-| Fires on | The property you choose, e.g. Published | Any change, including edits to the text |
-| Security | Shared secret in a header | Every event signed by Notion |
+Follow the [publishing guide](docs/publishing.md) to configure and verify one path. Without webhooks, the one-hour cache interval allows refreshes on subsequent requests; it is not an hourly background job.
 
-Notion runs database automations over a three-second window. Connection webhooks group changes before sending them, so they take longer; on the free plan we measured about a minute from the edit to the updated page.
+## How it works
 
-Both call the same endpoint, `https://your-site/api/notion-webhook`, and both are refused unless their environment variable is set. If your host challenges bots (a firewall "challenge" or "attack" mode), keep that path out of it: Notion's servers cannot pass a browser challenge, so the events would never arrive.
-
-### Database automation
-
-1. Generate a secret, for example with `openssl rand -hex 32`, and set it as `NOTION_AUTOMATION_SECRET` on your host. Redeploy.
-2. In the database, open Automations and create a new one.
-3. Trigger: the `Published` property is edited, so both ticking and unticking publish.
-4. Action: send a webhook to `https://your-site/api/notion-webhook`, with a custom header `X-Webhook-Secret` set to your secret.
-5. Tick `Published` on a post. It is live on the next page load.
-
-Automations only fire on property changes. To push a text edit made after publishing, untick and tick `Published` again, or rely on the connection webhook or the hourly refresh.
-
-### Connection webhook
-
-1. In the Developer portal, open your connection, then the Webhooks tab, and create a subscription for `https://your-site/api/notion-webhook` with the page and data source events. The URL must be public and on HTTPS: Notion cannot reach localhost.
-2. Notion sends a one-time verification token to your site. Find it in your server logs (the endpoint prints it while no token is configured), then choose Verify in the Webhooks tab and paste it.
-3. Set the same value as `NOTION_WEBHOOK_VERIFICATION_TOKEN` on your host and redeploy. From then on, the site verifies Notion's signature on every event and rejects anything else.
-
-### Behind the scenes
-
-Every Notion request goes through Next's data cache with tags. A webhook expires exactly two of them: the post list (index, home, sitemap, feed, related posts) and the edited page. Other posts keep their cached bodies, so a publish costs a couple of API calls, not a rebuild. If you run several server instances yourself, give them a shared cache; on Vercel this is built in.
-
-## What gets rendered
-
-Paragraphs with bold, italic, code, strikethrough, underline and links; headings, with anchors and an optional table of contents; bulleted, numbered and to-do lists, nested; toggles and toggle headings; quotes; callouts with their icon; code with a language class for your highlighter; images; YouTube and Vimeo as privacy-friendly players that load lazily; bookmarks and other embeds as plain links; tables with header rows and columns; columns; dividers; equations (as source text); synced blocks.
-
-Headings shift down one level, so the post title stays the only `h1`. Anything unsupported is left out of the page, kept as an HTML comment and reported by the content check, so it never disappears silently. Links to other published posts become links to their pages on your site; links to any other page of your workspace are removed, so private workspace URLs never reach the public HTML.
-
-## What it does not do
-
-- **It does not copy Notion's look.** Posts take your site's design; the template ships a neutral one.
-- **It only reads.** Notion is the source and the site never writes back to it.
-- **Some content stays in Notion.** Videos, PDFs and audio uploaded to Notion are left out (link to an external host instead), and equations show as source text. The content check reports each one. Sub-pages and databases inside a post are workspace navigation, so they are skipped.
-- **It is not a hosted service.** You deploy the site yourself, on Vercel or any Node.js host.
-- **It is wired for Next.js.** The core has no framework code, but the template and its caching are Next.js.
-
-## Content checks
-
-`npm run build` first checks the published posts and stops the deploy when something would hurt readers:
-
-- Notion returned no posts at all, which usually means an expired token;
-- a published row has no title, no slug, or a slug already used by a newer post;
-- a cover or a link uses a temporary Notion file URL, which breaks within an hour;
-- the text still contains `[TODO`, `[TK]`, `[FACT-CHECK` or `lorem ipsum`.
-
-Missing descriptions, overlong titles and covers without alt text are warnings. `npm run check:content` runs the same checks on every article body too.
+The TypeScript core reads the official API and converts blocks into HTML. Next.js caches that data. Page events invalidate the post list and the changed page; broader database events can invalidate more. The core has no runtime dependencies. The included template depends on Next.js and React.
 
 ## Add it to an existing Next.js site
 
-Copy these into your project at the same paths under `src/`; the imports use the `@/*` alias for `src/*`.
+Use the [integration guide](docs/existing-site.md) to copy the core, configuration, components and routes into an App Router project. The ready-to-run template targets Next.js 16; older versions need adaptation.
 
-- [`src/lib/notion`](src/lib/notion): the core, with no dependencies. Leave it unchanged: everything specific to your site goes in the config.
-- [`src/blog.config.ts`](src/blog.config.ts): your property names, publish rule and site details.
-- [`src/lib/blog.ts`](src/lib/blog.ts) and [`src/lib/demo`](src/lib/demo): the Next.js wiring, and the demo content it falls back to. To drop the demo, remove the `DEMO` branches from `blog.ts`.
-- [`src/components`](src/components): the post card, the JSON-LD tag and the setup notice that the pages use.
-- The routes you want from [`src/app`](src/app): `blog` (index, posts and feed), `notion-image`, `api/notion-webhook`, and optionally `sitemap.xml`, `robots.ts` and `llms.txt`. If your site already has a sitemap or robots file, merge the entries instead.
-- The article styles: the "Article body" section of [`src/app/globals.css`](src/app/globals.css), adapted to your design.
+## What it does not do
 
-The template targets Next.js 16. On older versions, call `revalidateTag(tag)` with one argument in the webhook route, and on Next.js 14 read route `params` without awaiting them: that is how the core, the webhook and the image route run in production on Next.js 14. The core type-checks with a TypeScript `target` of ES2017 or later, the default in new Next.js projects.
+This is a self-hosted public blog, not an access-controlled document portal. Unpublishing cannot erase downloaded content or cached images. Notion-hosted video, audio and PDFs are not rendered; equations appear as source text. Read the [rendering limits](docs/rendering.md) before migrating content.
 
-Using a coding agent? [AGENTS.md](AGENTS.md) walks it through the same steps.
+Hosting and Notion remain external services. The kit makes no ranking promises and does not provide comments, search or an admin dashboard.
 
-## Security
+## Contribute and license
 
-- The connection only needs Read content, and its token never leaves the server.
-- The webhook fails closed. The automation secret is compared in constant time; webhook events must carry a valid HMAC-SHA256 signature.
-- The image route only serves paths this site signed, only proxies files hosted by Notion, and sandboxes SVGs so they cannot run scripts.
-- Text is escaped and links are filtered: a `javascript:` link typed in Notion never reaches the page.
+Bug reports with a reproducible example are useful. [CONTRIBUTING.md](CONTRIBUTING.md) explains development and tests; report security issues through [SECURITY.md](SECURITY.md).
 
-Found a vulnerability? Please report it privately from the repository's Security tab ("Report a vulnerability"), not in a public issue.
-
-## Development
-
-```bash
-npm test            # core tests, Node's built-in runner, no framework
-npm run typecheck
-npm run demo        # production build with the demo content on port 3100
-```
-
-`scripts/mock-notion-server.ts` serves the demo workspace over HTTP, so you can test the whole publish flow, cache and webhook included, without a Notion account. Instructions are in the file.
-
-## License
-
-[MIT](LICENSE) © 2026 Loris.
+[MIT](LICENSE) © 2026 Loris. Not affiliated with Notion Labs, Inc.

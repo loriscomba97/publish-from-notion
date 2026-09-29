@@ -19,6 +19,8 @@ export type WebhookOptions = {
   automationSecret?: string;
   /** Verification token of the integration webhook subscription. */
   verificationToken?: string;
+  /** Temporarily enable token logging during subscription setup. Disable after verification. */
+  allowVerificationLogs?: boolean;
   log?: (message: string) => void;
 };
 
@@ -120,13 +122,16 @@ export async function handleNotionWebhook(request: Request, options: WebhookOpti
 
   // One-time handshake when a webhook subscription is created in the Developer portal: a token
   // and no event type. Checked before signatures, so it is recognized whatever headers it carries.
-  // It never triggers anything: at most it prints the token while none is configured.
+  // It never invalidates data. Token logging requires an explicit temporary setup option.
   if (typeof payload.verification_token === 'string' && payload.type === undefined) {
+    if (!/^[A-Za-z0-9_-]{1,256}$/.test(payload.verification_token)) {
+      return { ok: false, status: 400, reason: 'invalid verification token format' };
+    }
     if (options.verificationToken) {
       log('received a verification request, but a verification token is already configured: ignored.');
-    } else {
+    } else if (options.allowVerificationLogs) {
       log(
-        'Notion sent the verification token for your webhook subscription. Paste it in the Developer portal ' +
+        'Setup request received (unauthenticated). For the subscription you just created, verify in the Developer portal ' +
           '(your connection > Webhooks > Verify) and save it as NOTION_WEBHOOK_VERIFICATION_TOKEN. ' +
           `Token: ${payload.verification_token}`,
       );

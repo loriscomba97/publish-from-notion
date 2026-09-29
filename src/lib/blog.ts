@@ -17,11 +17,11 @@ export const DEMO = process.env.NOTION_DEMO === '1' || (!process.env.NOTION_TOKE
  * Whether search engines may index the site. SITE_INDEXABLE wins when set; on Vercel only
  * production is indexable; the demo never is.
  */
-export const INDEXABLE = process.env.SITE_INDEXABLE
+export const INDEXABLE = !DEMO && (process.env.SITE_INDEXABLE
   ? process.env.SITE_INDEXABLE === 'true'
   : process.env.VERCEL_ENV
     ? process.env.VERCEL_ENV === 'production'
-    : !DEMO;
+    : true);
 
 const demoFetch: typeof fetch = async (input, init) => (await import('./demo/notion')).demoFetch(input, init);
 

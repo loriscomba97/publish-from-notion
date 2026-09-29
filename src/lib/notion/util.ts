@@ -51,6 +51,7 @@ export function compactId(id: string): string {
  */
 export function safeHref(href: string): string | null {
   const value = href.trim();
+  if (/[\\\u0000-\u0020\u007f]/.test(value)) return null;
   if (value.startsWith('#')) return value;
   if (value.startsWith('/') && !value.startsWith('//')) return value;
   try {
@@ -64,6 +65,7 @@ export function safeHref(href: string): string | null {
 /** Image or media source that is safe to put in a src: http(s) URLs and site-relative paths. */
 export function safeSrc(src: string): string | null {
   const value = src.trim();
+  if (/[\\\u0000-\u0020\u007f]/.test(value)) return null;
   if (value.startsWith('/') && !value.startsWith('//')) return value;
   try {
     const url = new URL(value);
