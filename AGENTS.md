@@ -17,7 +17,8 @@ When a user asks you to add a Notion blog to their site:
 5. **Set up the environment.** Add the variables from `.env.example` to `.env.local` with empty values and ask the user to paste them. Never write a real token into a committed file, and never print one.
 6. **Style the article body** with the user's design, starting from the "Article body" section of `src/app/globals.css`.
 7. **Verify.** `npm run build` passes; `/blog`, one post and `/sitemap.xml` render; `POST /api/notion-webhook` without a secret answers 401.
-8. **Hand over the Notion side.** Point the user to the README section "Instant publishing": a database automation on paid plans, or a connection webhook on any plan.
+8. **Offer the optional collections** when the site has releases or case studies: a changelog and customer stories, as `docs/collections.md` describes.
+9. **Hand over the Notion side.** Point the user to the README section "Instant publishing": a database automation on paid plans, or a connection webhook on any plan.
 
 ## Working on this repository
 

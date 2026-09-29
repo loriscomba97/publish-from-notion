@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 (unreleased)
+
+- **Changelog:** a Notion database of releases, published as one page with an anchor per release, an RSS feed of releases, sitemap and llms.txt entries, and optional notes from each release's page (`defineChangelogConfig`, `queryReleases`, `loadReleaseNotes`, `changelogFeed`).
+- **Customer stories:** a second collection of articles at `/customers`, with customer, role, company, pull quote and photo, and `Article` structured data.
+- **Collections:** featured entries listed first (`properties.featured`), extra image properties (`images`), a collection label and schema type (`label`, `articleType`), links between collections (`links` in `loadArticle`), and sitemap entries without a second home page (`{ home: false }`).
+- **Tooling:** the content check covers every configured collection; `npm run notion:setup -- --collection stories` or `-- --collection changelog` adds their properties.
+- **Template:** the navigation, home page, sitemap and llms.txt include the collections that are on; the header wraps on narrow screens.
+
 ## 1.0.0 (2026-09-29)
 
 First public release.

@@ -48,8 +48,8 @@ Do not import a local `SITE_URL=http://localhost:3000` into your hosting setting
 
 ## Environment variables
 
-[`.env.example`](../.env.example) lists all variables. Never prefix secrets with `NEXT_PUBLIC_`. `NOTION_IMAGE_KEY` is optional and defaults to the API token; changing it invalidates old image signatures on future uncached requests. `SITE_INDEXABLE=false` requests no indexing; it does not restrict access.
+[`.env.example`](../.env.example) lists all variables. Never prefix secrets with `NEXT_PUBLIC_`. `NOTION_IMAGE_KEY` is optional and defaults to the API token; changing it invalidates old image signatures on future uncached requests. `SITE_INDEXABLE=false` requests no indexing; it does not restrict access. `NOTION_CHANGELOG_DATA_SOURCE` and `NOTION_STORIES_DATA_SOURCE` turn on the optional changelog and customer stories; see [Changelog and customer stories](collections.md).
 
 The setup script writes to Notion only when you explicitly run it. Use a dedicated empty database for `npm run notion:setup -- --demo`, temporarily grant Update content and Insert content, then return the connection to Read content. The website itself only reads.
 
-[Set up automatic publishing](publishing.md) · [Back to README](../README.md)
+[Set up automatic publishing](publishing.md) · [Changelog and customer stories](collections.md) · [Back to README](../README.md)

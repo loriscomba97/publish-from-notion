@@ -45,6 +45,7 @@ The [setup guide](docs/setup.md) covers every field, permissions and the optiona
 - **Use Notion as your editor.** The website selects published rows and renders their blocks as HTML. Your database can stay private, and the API token stays on the server.
 - **Update without rebuilding.** Signed connection webhooks notify the website about page edits. The receiving route invalidates cached data so later requests can render the update.
 - **Produce a complete blog.** Article pages include metadata and structured data. The template also generates a sitemap, RSS and a text index at `llms.txt`. Uploaded images are served through signed paths on your domain.
+- **Add a changelog and customer stories.** Two optional databases next to the blog: releases on one page with anchors and their own RSS feed, and case studies with a quote and the customer's photo. See [Changelog and customer stories](docs/collections.md).
 
 ## Instant publishing
 
