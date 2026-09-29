@@ -72,7 +72,7 @@ Without any setup, every page refreshes on its own once an hour. To publish with
 | Fires on | The property you choose, e.g. Published | Any change, including edits to the text |
 | Security | Shared secret in a header | Every event signed by Notion |
 
-Both call the same endpoint, `https://your-site/api/notion-webhook`, and both are refused unless their environment variable is set.
+Both call the same endpoint, `https://your-site/api/notion-webhook`, and both are refused unless their environment variable is set. If your host challenges bots (a firewall "challenge" or "attack" mode), keep that path out of it: Notion's servers cannot pass a browser challenge, so the events would never arrive.
 
 ### Database automation
 

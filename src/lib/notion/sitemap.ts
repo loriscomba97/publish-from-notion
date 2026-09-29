@@ -3,10 +3,10 @@ import type { Post } from './posts';
 import { absoluteUrl, postPath } from './seo';
 
 /**
- * XML sitemap, served from an ordinary route handler (app/sitemap.xml/route.ts) rather than
- * Next's sitemap.ts convention: on Vercel the convention was not purged by revalidateTag in our
- * tests, so an unpublished post stayed listed until the hourly refresh. A route handler is purged
- * like every other page.
+ * XML sitemap, for a route handler at app/sitemap.xml/route.ts that renders on every request
+ * (`revalidate = 0`) while its data stays in the tagged cache. On Vercel, a cached /sitemap.xml
+ * was not reached by webhook purges, neither through Next's sitemap.ts convention nor as a cached
+ * route handler, so an unpublished post stayed listed until the hourly refresh.
  */
 
 export type SitemapEntry = { url: string; lastModified?: string };
