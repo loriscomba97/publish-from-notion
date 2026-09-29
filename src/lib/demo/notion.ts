@@ -366,7 +366,7 @@ export const demoReleases: DemoRelease[] = [
     id: releaseIds.v11,
     name: 'Changelog and customer stories',
     version: '1.1.0',
-    date: '2026-09-30',
+    date: '2026-09-29',
     summary: 'Two new collections next to the blog: a changelog and customer stories, both written in Notion.',
     changes: {
       New: [

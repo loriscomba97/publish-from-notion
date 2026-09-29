@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 (unreleased)
+## 1.1.0 (2026-09-29)
 
 - **Changelog:** a Notion database of releases, published as one page with an anchor per release, an RSS feed of releases, sitemap and llms.txt entries, and optional notes from each release's page (`defineChangelogConfig`, `queryReleases`, `loadReleaseNotes`, `changelogFeed`).
 - **Customer stories:** a second collection of articles at `/customers`, with customer, role, company, pull quote and photo, and `Article` structured data.
