@@ -27,7 +27,9 @@ const post: Post = {
   cover: null,
   coverAlt: '',
   coverIsAi: false,
+  featured: false,
   extra: {},
+  images: {},
 };
 
 describe('config paths', () => {

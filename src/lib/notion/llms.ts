@@ -18,7 +18,7 @@ export function llmsTxt(
   const line = (link: LlmsLink) =>
     `- [${link.title.replace(/[[\]]/g, '')}](${link.url})${link.description ? `: ${link.description.replace(/\s+/g, ' ').trim()}` : ''}`;
   const blog: LlmsSection = {
-    title: 'Blog',
+    title: config.label,
     links: posts.map((post) => ({
       title: post.title,
       url: absoluteUrl(config, postPath(config, post)),

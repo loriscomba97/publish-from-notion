@@ -11,11 +11,14 @@ import { absoluteUrl, postPath } from './seo';
 
 export type SitemapEntry = { url: string; lastModified?: string };
 
-/** Home, blog index and every post whose canonical URL is on this site. */
-export function sitemapEntries(config: BlogConfig, posts: Post[]): SitemapEntry[] {
+/**
+ * Home, the collection index and every post whose canonical URL is on this site. For a second
+ * collection on the same site, pass `{ home: false }` so the home page is listed once.
+ */
+export function sitemapEntries(config: BlogConfig, posts: Post[], options: { home?: boolean } = {}): SitemapEntry[] {
   const own = posts.filter((post) => !post.canonicalUrl || post.canonicalUrl === absoluteUrl(config, postPath(config, post)));
   return [
-    { url: absoluteUrl(config, '/') },
+    ...(options.home === false ? [] : [{ url: absoluteUrl(config, '/') }]),
     { url: absoluteUrl(config, config.basePath), lastModified: posts[0]?.updatedAt },
     ...own.map((post) => ({ url: absoluteUrl(config, postPath(config, post)), lastModified: post.updatedAt })),
   ];

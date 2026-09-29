@@ -9,7 +9,7 @@ import type { Post } from './posts';
 
 export type Publisher = { name: string; url: string; logo?: string };
 
-export function absoluteUrl(config: BlogConfig, path: string): string {
+export function absoluteUrl(config: Pick<BlogConfig, 'siteUrl'>, path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   return `${config.siteUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
@@ -69,8 +69,9 @@ export function postMetadata(config: BlogConfig, post: Post, options: { imageUrl
 }
 
 /**
- * JSON-LD for a post page as one @graph: BlogPosting, WebPage, BreadcrumbList and, when the post
- * has a real FAQ section, FAQPage. Nodes reference each other by @id.
+ * JSON-LD for a post page as one @graph: the article (BlogPosting, or the config's articleType),
+ * WebPage, BreadcrumbList and, when the post has a real FAQ section, FAQPage. Nodes reference
+ * each other by @id.
  */
 export function postJsonLd(
   config: BlogConfig,
@@ -82,7 +83,7 @@ export function postJsonLd(
   const publisher = options.publisher ?? { name: config.siteName, url: site };
   const graph: Record<string, unknown>[] = [
     {
-      '@type': 'BlogPosting',
+      '@type': config.articleType,
       '@id': `${url}#article`,
       headline: post.title,
       description: post.metaDescription || post.excerpt || undefined,
@@ -109,7 +110,7 @@ export function postJsonLd(
       '@id': `${url}#breadcrumb`,
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: site },
-        { '@type': 'ListItem', position: 2, name: 'Blog', item: absoluteUrl(config, config.basePath) },
+        { '@type': 'ListItem', position: 2, name: config.label, item: absoluteUrl(config, config.basePath) },
         { '@type': 'ListItem', position: 3, name: post.title, item: url },
       ],
     },
@@ -136,9 +137,29 @@ export function postJsonLd(
   return { '@context': 'https://schema.org', '@graph': graph };
 }
 
-/** JSON-LD for the blog index: the Blog and its posts. */
+/**
+ * JSON-LD for a collection index: a Blog with its posts, or, for any other articleType, a
+ * CollectionPage with its articles.
+ */
 export function blogJsonLd(config: BlogConfig, posts: Post[], options: { description?: string } = {}): Record<string, unknown> {
   const url = absoluteUrl(config, config.basePath);
+  const entries = posts.map((post) => ({
+    '@type': config.articleType,
+    headline: post.title,
+    url: absoluteUrl(config, postPath(config, post)),
+    datePublished: post.publishedAt,
+  }));
+  if (config.articleType !== 'BlogPosting') {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': `${url}#collection`,
+      url,
+      name: `${config.label} | ${config.siteName}`,
+      description: options.description,
+      hasPart: entries,
+    };
+  }
   return {
     '@context': 'https://schema.org',
     '@type': 'Blog',
@@ -146,12 +167,7 @@ export function blogJsonLd(config: BlogConfig, posts: Post[], options: { descrip
     url,
     name: config.siteName,
     description: options.description,
-    blogPost: posts.map((post) => ({
-      '@type': 'BlogPosting',
-      headline: post.title,
-      url: absoluteUrl(config, postPath(config, post)),
-      datePublished: post.publishedAt,
-    })),
+    blogPost: entries,
   };
 }
 

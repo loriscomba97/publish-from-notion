@@ -1,4 +1,5 @@
 import type { Article } from './article';
+import type { Release, ReleaseNotes } from './changelog';
 import type { Post, SkippedRow } from './posts';
 
 /**
@@ -7,7 +8,7 @@ import type { Post, SkippedRow } from './posts';
  * Warnings are printed and let the build go on.
  */
 
-export type Issue = { level: 'error' | 'warning'; post?: string; message: string };
+export type Issue = { level: 'error' | 'warning'; post?: string; message: string; collection?: string };
 
 export type CheckInput = {
   /** A Notion token is set (without one, an empty blog is expected). */
@@ -16,6 +17,10 @@ export type CheckInput = {
   skipped: SkippedRow[];
   /** Rendered bodies, when the check also loads every article. */
   articles?: Article[];
+  /** Name printed with each issue, for sites with several collections. */
+  collection?: string;
+  /** An empty collection is expected (customer stories not written yet): a warning, not an error. */
+  allowEmpty?: boolean;
 };
 
 export type CheckOptions = {
@@ -33,11 +38,13 @@ export function checkContent(input: CheckInput, options: CheckOptions = {}): Iss
   const maxTitle = options.maxTitleLength ?? 65;
   const maxDescription = options.maxDescriptionLength ?? 160;
   const issues: Issue[] = [];
-  const error = (message: string, post?: string) => issues.push({ level: 'error', post, message });
-  const warn = (message: string, post?: string) => issues.push({ level: 'warning', post, message });
+  const tag = input.collection ? { collection: input.collection } : {};
+  const error = (message: string, post?: string) => issues.push({ level: 'error', post, message, ...tag });
+  const warn = (message: string, post?: string) => issues.push({ level: 'warning', post, message, ...tag });
 
   if (input.configured && input.posts.length === 0) {
-    error('Notion returned no published posts. Check NOTION_TOKEN, the data source id and the publish property, or publish a first post.');
+    const message = 'Notion returned no published posts. Check NOTION_TOKEN, the data source id and the publish property, or publish a first post.';
+    if (input.allowEmpty) warn(message); else error(message);
   }
   for (const row of input.skipped) error(`Published in Notion but not on the site: ${row.reason}.`, row.title);
 
@@ -70,6 +77,37 @@ export function checkContent(input: CheckInput, options: CheckOptions = {}): Iss
   return issues;
 }
 
+export type ReleaseCheckInput = {
+  releases: Release[];
+  skipped: SkippedRow[];
+  /** Rendered page contents, when page bodies are on, by release id. */
+  notes?: Map<string, ReleaseNotes>;
+  collection?: string;
+};
+
+/** The same editorial gate for a changelog: rows that cannot go online, draft markers, temporary file links. */
+export function checkReleases(input: ReleaseCheckInput, options: Pick<CheckOptions, 'placeholders'> = {}): Issue[] {
+  const placeholders = options.placeholders ?? ['[TODO', '[TK]', '[FACT-CHECK', 'lorem ipsum'];
+  const issues: Issue[] = [];
+  const tag = input.collection ? { collection: input.collection } : {};
+  const add = (level: Issue['level'], post: string, message: string) => issues.push({ level, post, message, ...tag });
+  for (const row of input.skipped) add('error', row.title, `Published in Notion but not on the site: ${row.reason}.`);
+  for (const release of input.releases) {
+    const name = release.version && release.title ? `${release.version}: ${release.title}` : release.title || release.version;
+    if (release.dateSource === 'created') add('warning', name, 'No release date set: the page creation date is used instead.');
+    const notes = input.notes?.get(release.id);
+    const visible = [release.summary, ...release.sections.flatMap((s) => s.items), notes?.text ?? ''].join(' ').toLowerCase();
+    for (const marker of placeholders) {
+      if (visible.includes(marker.toLowerCase())) add('error', name, `The notes still contain "${marker}".`);
+    }
+    if (notes && EXPIRING_NOTION_URL.test(notes.html)) add('error', name, 'The notes link a temporary Notion file URL that will break within an hour.');
+    if (notes?.unsupported.length) add('warning', name, `Not rendered: ${notes.unsupported.join(', ')}.`);
+  }
+  return issues;
+}
+
 export function formatIssues(issues: Issue[]): string {
-  return issues.map((i) => `${i.level === 'error' ? 'ERROR  ' : 'warning'}  ${i.post ? `"${i.post}": ` : ''}${i.message}`).join('\n');
+  return issues
+    .map((i) => `${i.level === 'error' ? 'ERROR  ' : 'warning'}  ${i.collection ? `[${i.collection}] ` : ''}${i.post ? `"${i.post}": ` : ''}${i.message}`)
+    .join('\n');
 }

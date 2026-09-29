@@ -21,15 +21,19 @@ export type Article = {
   unsupported: string[];
 };
 
+/** A page of another collection on the same site, for links between collections. */
+export type LinkTarget = { id: string; href: string; title: string };
+
 /**
  * Loads and renders one post: body tree, signed URLs for images uploaded to Notion, links to other
- * posts, FAQ pairs and reading time. Pass the full post list so links between posts resolve.
+ * posts, FAQ pairs and reading time. Pass the full post list so links between posts resolve, and
+ * `links` for pages of other collections (a customer story linking a blog post, say).
  */
 export async function loadArticle(
   client: NotionClient,
   config: BlogConfig,
   post: Post,
-  options: { imageKey: string; posts?: Post[] } & Pick<RenderOptions, 'headingOffset' | 'reservedIds'>,
+  options: { imageKey: string; posts?: Post[]; links?: LinkTarget[] } & Pick<RenderOptions, 'headingOffset' | 'reservedIds'>,
 ): Promise<Article> {
   const tree = await fetchBlockTree(client, post.id, { tags: [TAGS.page(post.id)] });
 
@@ -41,13 +45,16 @@ export async function loadArticle(
   }
 
   const byId = new Map((options.posts ?? [post]).map((p) => [compactId(p.id), p]));
+  const others = new Map((options.links ?? []).map((link) => [compactId(link.id), link]));
   const rendered = renderBlocks(tree, {
     imageUrls,
     headingOffset: options.headingOffset,
     reservedIds: options.reservedIds,
     resolvePage: (pageId) => {
       const target = byId.get(compactId(pageId));
-      return target ? { href: `${config.basePath}/${target.slug}`, title: target.title } : null;
+      if (target) return { href: `${config.basePath}/${target.slug}`, title: target.title };
+      const other = others.get(compactId(pageId));
+      return other ? { href: other.href, title: other.title } : null;
     },
   });
 

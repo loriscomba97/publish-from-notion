@@ -29,8 +29,12 @@ export type Post = {
   cover: ImageSource | null;
   coverAlt: string;
   coverIsAi: boolean;
+  /** Ticked in the featured property, when the config names one. Featured posts are listed first. */
+  featured: boolean;
   /** Values of the extra properties named in the config, as text. */
   extra: Record<string, string>;
+  /** Images from the extra image properties named in the config, by key. */
+  images: Record<string, ImageSource | null>;
 };
 
 /** A row that is published in Notion but cannot go on the site, with the reason. */
@@ -60,7 +64,7 @@ function imageFrom(file: NotionFile | undefined | null, notion: ImageSource | nu
   return file?.type === 'file' ? notion : null;
 }
 
-function coverOf(page: NotionPage, names: string | string[]): ImageSource | null {
+function propertyImage(page: NotionPage, names: string | string[]): ImageSource | null {
   const version = imageVersion(page.last_edited_time);
   for (const name of Array.isArray(names) ? names : [names]) {
     const property = page.properties[name];
@@ -69,7 +73,12 @@ function coverOf(page: NotionPage, names: string | string[]): ImageSource | null
     const image = imageFrom(file, { kind: 'notion', ref: { kind: 'property', id: page.id, property: property.id, index: 0 }, version });
     if (image) return image;
   }
-  return imageFrom(page.cover, { kind: 'notion', ref: { kind: 'cover', id: page.id }, version });
+  return null;
+}
+
+function coverOf(page: NotionPage, names: string | string[]): ImageSource | null {
+  const version = imageVersion(page.last_edited_time);
+  return propertyImage(page, names) ?? imageFrom(page.cover, { kind: 'notion', ref: { kind: 'cover', id: page.id }, version });
 }
 
 export function mapPost(page: NotionPage, config: BlogConfig): Post {
@@ -94,7 +103,9 @@ export function mapPost(page: NotionPage, config: BlogConfig): Post {
     cover: coverOf(page, p.cover),
     coverAlt: readText(page, p.coverAlt),
     coverIsAi: readCheckbox(page, p.aiImage),
+    featured: p.featured ? readCheckbox(page, p.featured) : false,
     extra: Object.fromEntries(Object.entries(config.extra).map(([key, name]) => [key, readText(page, name)])),
+    images: Object.fromEntries(Object.entries(config.images).map(([key, names]) => [key, propertyImage(page, names)])),
   };
 }
 
@@ -113,12 +124,14 @@ export async function queryPosts(client: NotionClient, config: BlogConfig): Prom
   const rows = await client.queryDataSource(config.dataSource, { filter: publishFilter(config.publish) }, { tags: [TAGS.posts] });
 
   // Sorted here rather than by the API, so a missing date property never breaks the query.
-  // Posts sharing a date keep Notion's own order: the most recently created page first.
+  // Featured posts come first when the config names a featured property. Posts sharing a date
+  // keep Notion's own order: the most recently created page first.
   const mapped = rows
     .filter((row) => row.object === 'page' && !row.in_trash)
     .map((row) => ({ row, post: mapPost(row, config) }))
     .sort(
       (a, b) =>
+        Number(b.post.featured) - Number(a.post.featured) ||
         time(b.post.publishedAt) - time(a.post.publishedAt) ||
         time(b.row.created_time) - time(a.row.created_time) ||
         a.post.id.localeCompare(b.post.id),
