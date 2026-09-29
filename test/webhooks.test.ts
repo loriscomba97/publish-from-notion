@@ -97,6 +97,14 @@ describe('integration webhooks (any plan)', () => {
     assert.doesNotMatch(logs[1] ?? '', /another-token/);
   });
 
+  it('recognizes the handshake even when it carries a signature header', async () => {
+    const logs: string[] = [];
+    const request = post({ verification_token: 'token-from-notion' }, { 'x-notion-signature': 'sha256=whatever' });
+    const outcome = await handleNotionWebhook(request, { ...options, verificationToken: undefined, log: (m) => logs.push(m) });
+    assert.deepEqual(outcome, { ok: true, action: 'verification' });
+    assert.match(logs[0] ?? '', /Token: token-from-notion$/);
+  });
+
   it('still recognizes the handshake if Notion adds fields to it', async () => {
     const outcome = await handleNotionWebhook(post({ verification_token: 'token-from-notion', attempt_number: 1 }), { ...options, verificationToken: undefined });
     assert.deepEqual(outcome, { ok: true, action: 'verification' });

@@ -118,25 +118,27 @@ export async function handleNotionWebhook(request: Request, options: WebhookOpti
   }
   const payload = isRecord(body) ? body : {};
 
-  const signature = request.headers.get('x-notion-signature');
-  if (signature) {
-    if (!options.verificationToken) return { ok: false, status: 401, reason: 'signed event received but no verification token is configured' };
-    if (!(await verifyNotionSignature(raw, signature, options.verificationToken))) return { ok: false, status: 401, reason: 'invalid signature' };
-    return fromIntegrationEvent(payload);
-  }
-
-  // One-time handshake when a webhook subscription is created in the Developer portal:
-  // a token and no event type.
+  // One-time handshake when a webhook subscription is created in the Developer portal: a token
+  // and no event type. Checked before signatures, so it is recognized whatever headers it carries.
+  // It never triggers anything: at most it prints the token while none is configured.
   if (typeof payload.verification_token === 'string' && payload.type === undefined) {
     if (options.verificationToken) {
       log('received a verification request, but a verification token is already configured: ignored.');
     } else {
       log(
         'Notion sent the verification token for your webhook subscription. Paste it in the Developer portal ' +
-          `(your connection > Webhooks > Verify) and save it as NOTION_WEBHOOK_VERIFICATION_TOKEN: ${payload.verification_token}`,
+          '(your connection > Webhooks > Verify) and save it as NOTION_WEBHOOK_VERIFICATION_TOKEN. ' +
+          `Token: ${payload.verification_token}`,
       );
     }
     return { ok: true, action: 'verification' };
+  }
+
+  const signature = request.headers.get('x-notion-signature');
+  if (signature) {
+    if (!options.verificationToken) return { ok: false, status: 401, reason: 'signed event received but no verification token is configured' };
+    if (!(await verifyNotionSignature(raw, signature, options.verificationToken))) return { ok: false, status: 401, reason: 'invalid signature' };
+    return fromIntegrationEvent(payload);
   }
 
   const bearer = request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1] ?? '';
