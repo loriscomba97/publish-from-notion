@@ -5,10 +5,10 @@ export function SetupNotice() {
       <h2 id="setup-title">Connect your Notion database</h2>
       <ol>
         <li>
-          Create an internal integration at <a href="https://www.notion.so/profile/integrations">notion.so/profile/integrations</a> with
-          read access only, and copy its secret.
+          In Notion&apos;s <a href="https://app.notion.com/developers/connections">Developer portal</a>, create an internal connection
+          with Read content only, and copy its API token.
         </li>
-        <li>Open your blog database in Notion, then use the ••• menu, Connections, and add the integration.</li>
+        <li>Give it access to your blog database: in Notion, use the ••• menu, then Connections, then Add connection.</li>
         <li>
           Set <code>NOTION_TOKEN</code> and <code>NOTION_DATA_SOURCE</code> (the database link) in your environment, then redeploy.
         </li>

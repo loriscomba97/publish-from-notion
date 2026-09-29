@@ -25,7 +25,7 @@ export type CallOptions = {
 export type RequestContext = { method: 'GET' | 'POST'; path: string; tags: string[]; fresh: boolean };
 
 export type NotionClientOptions = {
-  /** Internal integration secret. Server-side only, never expose it to the browser. */
+  /** API token of an internal connection. Server-side only, never expose it to the browser. */
   token: string | undefined;
   /** Extra fetch options per request, e.g. Next.js caching `{ next: { revalidate, tags } }`. */
   requestInit?: (request: RequestContext) => RequestInit;
@@ -66,7 +66,7 @@ export class NotionApiError extends Error {
 }
 
 const SHARE_HINT =
-  'Make sure the database is shared with your integration: open it in Notion, "..." menu > Connections, add the integration.';
+  'Make sure the database is shared with your connection: in Notion, "..." menu > Connections > Add connection, or its Content access tab in the Developer portal.';
 
 async function toApiError(res: Response, method: string, path: string): Promise<NotionApiError> {
   let code = 'http_error';

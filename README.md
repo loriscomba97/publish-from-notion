@@ -3,7 +3,7 @@
 **Your CMS is a checkbox.** Write in Notion, tick *Published*, and the post is live on your own Next.js site, with the SEO already done. With a Notion automation, it takes a few seconds.
 
 - **Official Notion API, private drafts.** No session cookie, nothing shared to the web. Built on Notion API version 2025-09-03 (data sources).
-- **Instant publishing.** A Notion automation or a signed integration webhook purges exactly the post that changed. An hourly refresh is the safety net.
+- **Instant publishing.** A Notion automation or a signed connection webhook purges exactly the post that changed. An hourly refresh is the safety net.
 - **Images that never expire.** Files uploaded to Notion are served through your site from signed URLs that can be cached for a year.
 - **Ready for search engines and AI assistants.** Metadata, canonical URLs, one JSON-LD graph per post, FAQ structured data built from your own FAQ section, a sitemap, an RSS feed and llms.txt, all from the same post.
 - **Zero runtime dependencies.** The core is one folder of TypeScript, [`src/lib/notion`](src/lib/notion), with over a hundred tests on Node's built-in test runner.
@@ -45,14 +45,16 @@ Open http://localhost:3000. Until you connect Notion, the site shows built-in de
 
 The post itself is the page's content: write it in Notion as usual.
 
-**2. Create an integration.** Go to [notion.so/profile/integrations](https://www.notion.so/profile/integrations), create a new internal integration for your workspace, and give it **read content** access only. Copy its secret.
+Or let the kit add the properties for you: after steps 2 to 4, give the connection *Update content* and *Insert content* for a moment and run `npm run notion:setup`. Add `-- --demo` to also create the demo posts, with covers and images uploaded to Notion. Then take the extra capabilities away again: the site only reads.
 
-**3. Connect it to the database.** Open the database as a full page, open the ••• menu, choose Connections and add your integration. Without this step, Notion answers every request with "not found".
+**2. Create a connection.** In Notion's [Developer portal](https://app.notion.com/developers/connections), under Build, open Internal connections and create a new connection for your workspace (you need to be a workspace owner). In its Configuration tab, keep only **Read content** under Capabilities, then copy the **API token** from the Integration token section.
+
+**3. Give it access to the database.** In the connection's Content access tab, choose Edit access and select the database. Or, in Notion, open the database, then the ••• menu, Connections, Add connection. Without this step, Notion answers every request with "not found".
 
 **4. Set the environment variables.** Copy [`.env.example`](.env.example) to `.env.local` and fill in:
 
 ```bash
-NOTION_TOKEN=            # the integration secret
+NOTION_TOKEN=            # the API token of the connection
 NOTION_DATA_SOURCE=      # paste the database link
 SITE_URL=https://www.example.com
 ```
@@ -63,7 +65,7 @@ SITE_URL=https://www.example.com
 
 Without any setup, every page refreshes on its own once an hour. To publish within seconds, let Notion call your site. Use one or both of these:
 
-| | Database automation | Integration webhook |
+| | Database automation | Connection webhook |
 |---|---|---|
 | Needs Notion automations | Yes (paid plans) | No |
 | Speed | About 3 seconds | Usually within a minute |
@@ -80,12 +82,12 @@ Both call the same endpoint, `https://your-site/api/notion-webhook`, and both ar
 4. Action: send a webhook to `https://your-site/api/notion-webhook`, with a custom header `X-Webhook-Secret` set to your secret.
 5. Tick `Published` on a post. It is live on the next page load.
 
-Automations only fire on property changes. To push a text edit made after publishing, untick and tick `Published` again, or rely on the integration webhook or the hourly refresh.
+Automations only fire on property changes. To push a text edit made after publishing, untick and tick `Published` again, or rely on the connection webhook or the hourly refresh.
 
-### Integration webhook
+### Connection webhook
 
-1. In your integration's settings, open Webhooks and create a subscription for `https://your-site/api/notion-webhook`, with the page and data source events.
-2. Notion sends a one-time verification token to your site. Find it in your server logs (the endpoint prints it while no token is configured) and paste it in Notion's verification dialog.
+1. In the Developer portal, open your connection, then the Webhooks tab, and create a subscription for `https://your-site/api/notion-webhook` with the page and data source events. The URL must be public and on HTTPS: Notion cannot reach localhost.
+2. Notion sends a one-time verification token to your site. Find it in your server logs (the endpoint prints it while no token is configured), then choose Verify in the Webhooks tab and paste it.
 3. Set the same value as `NOTION_WEBHOOK_VERIFICATION_TOKEN` on your host and redeploy. From then on, the site verifies Notion's signature on every event and rejects anything else.
 
 ### Behind the scenes
@@ -117,8 +119,8 @@ Copy [`src/lib/notion`](src/lib/notion) (the core, no dependencies), [`src/lib/b
 
 ## Security
 
-- The integration only needs read access, and its secret never leaves the server.
-- The webhook fails closed. The automation secret is compared in constant time; integration events must carry a valid HMAC-SHA256 signature.
+- The connection only needs Read content, and its token never leaves the server.
+- The webhook fails closed. The automation secret is compared in constant time; webhook events must carry a valid HMAC-SHA256 signature.
 - The image route only serves paths this site signed, only proxies files hosted by Notion, and sandboxes SVGs so they cannot run scripts.
 - Text is escaped and links are filtered: a `javascript:` link typed in Notion never reaches the page.
 

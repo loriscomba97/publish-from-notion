@@ -10,7 +10,7 @@ const OUTSIDE_ARTICLE = new Set(['child_page', 'child_database']);
 /**
  * Loads a page body as a tree. Sibling subtrees load in parallel, bounded by the client's
  * concurrency limit. Any API failure throws, so an article is never rendered with parts missing,
- * except one case: a synced block copied from a page the integration cannot read renders empty
+ * except one case: a synced block copied from a page the connection cannot read renders empty
  * (with a warning) instead of taking the whole article down.
  */
 export async function fetchBlockTree(
@@ -34,7 +34,7 @@ export async function fetchBlockTree(
       return await level(original, depth + 1);
     } catch (error) {
       if (error instanceof NotionApiError && (error.status === 404 || error.status === 403)) {
-        log(`synced block ${block.id} copies a block the integration cannot read; it renders empty. Share its source page with the integration.`);
+        log(`synced block ${block.id} copies a block the connection cannot read; it renders empty. Share its source page with the connection.`);
         return [];
       }
       throw error;

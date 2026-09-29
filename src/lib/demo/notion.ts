@@ -22,17 +22,17 @@ const mention = (text: string, pageId: string): RichText => ({
   mention: { type: 'page', page: { id: pageId } },
 });
 
-type Node = { block: NotionBlock; children: Node[] };
-const b = (type: string, data: Record<string, unknown>, children: Node[] = []): Node => ({
+export type DemoNode = { block: NotionBlock; children: DemoNode[] };
+const b = (type: string, data: Record<string, unknown>, children: DemoNode[] = []): DemoNode => ({
   block: { object: 'block', id: nextId(), type, has_children: children.length > 0, last_edited_time: EDITED, [type]: data } as NotionBlock,
   children,
 });
 const p = (...rich: RichText[]) => b('paragraph', { rich_text: rich });
 const h = (level: 1 | 2 | 3, text: string) => b(`heading_${level}`, { rich_text: [t(text)], is_toggleable: false });
-const li = (text: string | RichText[], children: Node[] = []) => b('bulleted_list_item', { rich_text: typeof text === 'string' ? [t(text)] : text }, children);
+const li = (text: string | RichText[], children: DemoNode[] = []) => b('bulleted_list_item', { rich_text: typeof text === 'string' ? [t(text)] : text }, children);
 const ol = (text: string) => b('numbered_list_item', { rich_text: [t(text)] });
 const todo = (text: string, checked: boolean) => b('to_do', { rich_text: [t(text)], checked });
-const toggle = (text: string, ...children: Node[]) => b('toggle', { rich_text: [t(text)] }, children);
+const toggle = (text: string, ...children: DemoNode[]) => b('toggle', { rich_text: [t(text)] }, children);
 const callout = (emoji: string, text: string) => b('callout', { rich_text: [t(text)], icon: { type: 'emoji', emoji } });
 const quote = (text: string) => b('quote', { rich_text: [t(text)] });
 const code = (language: string, source: string) => b('code', { rich_text: [t(source)], language, caption: [] });
@@ -46,9 +46,9 @@ const table = (rows: string[][]) =>
 
 const fileUrl = (name: string) => `https://files.demo.invalid/${name}?X-Amz-Expires=3600`;
 
-type Row = { id: string; title: string; slug: string; date: string; published: boolean; excerpt: string; category: string; tags: string[]; cover: string; coverAlt: string; ai?: boolean };
+export type DemoRow = { id: string; title: string; slug: string; date: string; published: boolean; excerpt: string; category: string; tags: string[]; cover: string; coverAlt: string; ai?: boolean };
 
-function pageOf(row: Row): NotionPage {
+function pageOf(row: DemoRow): NotionPage {
   const text = (value: string, id: string) => ({ id, type: 'rich_text', rich_text: value ? [t(value)] : [] });
   return {
     object: 'page',
@@ -73,7 +73,7 @@ function pageOf(row: Row): NotionPage {
 
 const ids = { checkbox: nextId(), instant: nextId(), blocks: nextId(), search: nextId(), draft: nextId() };
 
-const rows: Row[] = [
+export const demoRows: DemoRow[] = [
   {
     id: ids.checkbox,
     title: 'Your CMS is a checkbox',
@@ -137,7 +137,7 @@ const rows: Row[] = [
   },
 ];
 
-const bodies: Record<string, Node[]> = {
+export const demoBodies: Record<string, DemoNode[]> = {
   [ids.checkbox]: [
     p(t('This site has no admin panel. Every post you are reading was written in a Notion database, and went live the moment someone ticked a checkbox.')),
     h(1, 'How it works'),
@@ -236,17 +236,17 @@ const bodies: Record<string, Node[]> = {
 };
 
 // Index everything the API can be asked for. Exported so the local mock server can edit posts.
-export const pages = new Map(rows.map((row) => [row.id, pageOf(row)]));
+export const pages = new Map(demoRows.map((row) => [row.id, pageOf(row)]));
 const blocks = new Map<string, NotionBlock>();
 const children = new Map<string, NotionBlock[]>();
-function index(parentId: string, nodes: Node[]) {
+function index(parentId: string, nodes: DemoNode[]) {
   children.set(parentId, nodes.map((n) => n.block));
   for (const n of nodes) {
     blocks.set(n.block.id, n.block);
     if (n.children.length) index(n.block.id, n.children);
   }
 }
-for (const [pageId, nodes] of Object.entries(bodies)) index(pageId, nodes);
+for (const [pageId, nodes] of Object.entries(demoBodies)) index(pageId, nodes);
 
 // Covers and images, drawn in code: no files to license, nothing fetched from the internet.
 const PALETTES: Record<string, [string, string, string, string]> = {
@@ -257,7 +257,7 @@ const PALETTES: Record<string, [string, string, string, string]> = {
   'diagram.svg': ['#f7f6f2', '#2b59c3', '#ef7a5a', '#6d6a63'],
 };
 
-function svg(name: string): string | null {
+export function demoSvg(name: string): string | null {
   const colors = PALETTES[name];
   if (!colors) return null;
   const [bg, a, c, d] = colors;
@@ -279,7 +279,7 @@ export async function demoFetch(input: RequestInfo | URL, init?: RequestInit): P
   if (process.env.NOTION_DEMO_LOG === '1') console.log(`[demo notion] ${method} ${url.hostname}${url.pathname}`);
 
   if (url.hostname === 'files.demo.invalid') {
-    const body = svg(url.pathname.slice(1));
+    const body = demoSvg(url.pathname.slice(1));
     return body ? new Response(body, { status: 200, headers: { 'content-type': 'image/svg+xml' } }) : new Response('Not found', { status: 404 });
   }
 

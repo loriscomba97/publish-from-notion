@@ -317,6 +317,8 @@ function renderRichText(items: RichText[] | undefined, ctx: Context): string {
   return html;
 }
 
+const WORKSPACE_LINK = /^https?:\/\/(?:www\.)?(?:notion\.so|(?:app\.)?notion\.com)\//i;
+
 /** Link target of a rich text run, after workspace links are mapped to posts or dropped. */
 function linkOf(item: RichText, ctx: Context): string | null {
   if (item.type === 'mention') {
@@ -324,12 +326,12 @@ function linkOf(item: RichText, ctx: Context): string | null {
     if (item.mention?.type === 'user' || item.mention?.type === 'database') return null;
   }
   if (!item.href) return null;
-  // Relative links such as "/1a2b3c..." point inside the workspace.
-  const relative = item.href.match(/^\/(?:[^/?#]*-)?([0-9a-f]{32})(?:[?#].*)?$/i);
+  // Relative links such as "/1a2b3c..." or "/p/1a2b3c..." point inside the workspace.
+  const relative = item.href.match(/^\/(?:p\/)?(?:[^/?#]*-)?([0-9a-f]{32})(?:[?#].*)?$/i);
   if (relative?.[1]) return ctx.resolvePage(relative[1])?.href ?? null;
-  // notion.so links are workspace links: rewritten to the post, or dropped. Published Notion sites
-  // (*.notion.site) are public by definition and are kept like any other URL.
-  if (/^https?:\/\/(?:www\.)?notion\.so\//i.test(item.href)) {
+  // Links to the Notion app (notion.so, app.notion.com) are workspace links: rewritten to the post,
+  // or dropped. Published Notion sites (*.notion.site) are public by definition and are kept.
+  if (WORKSPACE_LINK.test(item.href)) {
     const id = normalizeNotionId(item.href);
     return (id ? ctx.resolvePage(id)?.href : null) ?? null;
   }

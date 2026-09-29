@@ -16,6 +16,7 @@
     "start": "next start",
     "demo": "node scripts/demo.mjs",
     "check:content": "node --env-file-if-exists=.env.local --import ./scripts/register.mjs scripts/check-content.ts --bodies",
+    "notion:setup": "node --env-file-if-exists=.env.local --import ./scripts/register.mjs scripts/notion-setup.ts",
     "test": "node --import ./scripts/register.mjs --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "check:safety": "node scripts/check-public-safety.mjs",

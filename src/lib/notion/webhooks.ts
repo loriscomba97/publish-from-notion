@@ -6,7 +6,7 @@ import { constantTimeEqual, hmacSha256, isRecord, normalizeNotionId, secretsMatc
  *
  * 1. Database automations (paid Notion plans): "When Published is checked → Send webhook", with a
  *    custom header `X-Webhook-Secret: <NOTION_AUTOMATION_SECRET>`. Arrives in a few seconds.
- * 2. Integration webhooks (set up in the integration's settings, no automation needed): every
+ * 2. Connection webhooks (the Webhooks tab of the connection in the Developer portal, no automation needed): every
  *    event is signed with HMAC-SHA256 using the subscription's verification token, sent in
  *    `X-Notion-Signature`. Arrives within about a minute and also fires on text edits.
  *
@@ -125,15 +125,15 @@ export async function handleNotionWebhook(request: Request, options: WebhookOpti
     return fromIntegrationEvent(payload);
   }
 
-  // One-time handshake when a webhook subscription is created in the integration settings:
+  // One-time handshake when a webhook subscription is created in the Developer portal:
   // a token and no event type.
   if (typeof payload.verification_token === 'string' && payload.type === undefined) {
     if (options.verificationToken) {
       log('received a verification request, but a verification token is already configured: ignored.');
     } else {
       log(
-        'Notion sent the verification token for your webhook subscription. Paste it in the integration settings ' +
-          `(Webhooks > Verify) and save it as NOTION_WEBHOOK_VERIFICATION_TOKEN: ${payload.verification_token}`,
+        'Notion sent the verification token for your webhook subscription. Paste it in the Developer portal ' +
+          `(your connection > Webhooks > Verify) and save it as NOTION_WEBHOOK_VERIFICATION_TOKEN: ${payload.verification_token}`,
       );
     }
     return { ok: true, action: 'verification' };

@@ -54,6 +54,22 @@ describe('text and links', () => {
     );
   });
 
+  it('treats app.notion.com and /p/ links as workspace links too', () => {
+    const toPost = compactId(post);
+    const privatePage = compactId(uuid(703));
+    assert.equal(
+      html(
+        [
+          para(rt('app link', { href: `https://app.notion.com/p/${toPost}?v=123` })),
+          para(rt('private app link', { href: `https://app.notion.com/p/${privatePage}` })),
+          para(rt('relative', { href: `/p/${toPost}` })),
+        ],
+        { resolvePage },
+      ),
+      '<p><a href="/blog/other-post">app link</a></p>\n<p>private app link</p>\n<p><a href="/blog/other-post">relative</a></p>',
+    );
+  });
+
   it('never links user mentions', () => {
     const mention = { type: 'mention' as const, plain_text: '@Ada', href: null, mention: { type: 'user', user: { id: uuid(), name: 'Ada' } } };
     assert.equal(html([para(mention)]), '<p>@Ada</p>');
