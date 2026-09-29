@@ -29,6 +29,8 @@ export type Post = {
   cover: ImageSource | null;
   coverAlt: string;
   coverIsAi: boolean;
+  /** Values of the extra properties named in the config, as text. */
+  extra: Record<string, string>;
 };
 
 /** A row that is published in Notion but cannot go on the site, with the reason. */
@@ -57,14 +59,16 @@ function imageFrom(file: NotionFile | undefined | null, notion: ImageSource | nu
   return file?.type === 'file' ? notion : null;
 }
 
-function coverOf(page: NotionPage, name: string): ImageSource | null {
+function coverOf(page: NotionPage, names: string | string[]): ImageSource | null {
   const version = imageVersion(page.last_edited_time);
-  const property = page.properties[name];
-  const [file] = readFiles(page, name);
-  const fromProperty = property
-    ? imageFrom(file, { kind: 'notion', ref: { kind: 'property', id: page.id, property: property.id, index: 0 }, version })
-    : null;
-  return fromProperty ?? imageFrom(page.cover, { kind: 'notion', ref: { kind: 'cover', id: page.id }, version });
+  for (const name of Array.isArray(names) ? names : [names]) {
+    const property = page.properties[name];
+    if (!property) continue;
+    const [file] = readFiles(page, name);
+    const image = imageFrom(file, { kind: 'notion', ref: { kind: 'property', id: page.id, property: property.id, index: 0 }, version });
+    if (image) return image;
+  }
+  return imageFrom(page.cover, { kind: 'notion', ref: { kind: 'cover', id: page.id }, version });
 }
 
 export function mapPost(page: NotionPage, config: BlogConfig): Post {
@@ -89,6 +93,7 @@ export function mapPost(page: NotionPage, config: BlogConfig): Post {
     cover: coverOf(page, p.cover),
     coverAlt: readText(page, p.coverAlt),
     coverIsAi: readCheckbox(page, p.aiImage),
+    extra: Object.fromEntries(Object.entries(config.extra).map(([key, name]) => [key, readText(page, name)])),
   };
 }
 

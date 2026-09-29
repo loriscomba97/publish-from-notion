@@ -80,7 +80,7 @@ const wanted: Array<[name: string, type: string]> = [
   [p.category, 'select'],
   [p.tags, 'multi_select'],
   [p.author, 'rich_text'],
-  [p.cover, 'files'],
+  [Array.isArray(p.cover) ? (p.cover[0] ?? 'Cover') : p.cover, 'files'],
   [p.coverAlt, 'rich_text'],
   [p.aiImage, 'checkbox'],
 ];

@@ -45,6 +45,8 @@ Open http://localhost:3000. Until you connect Notion, the site shows built-in de
 
 The post itself is the page's content: write it in Notion as usual.
 
+Existing databases rarely match these names exactly, so the config also takes a list of cover properties tried in order (`cover: ['Cover', 'Old cover']`) and extra properties read as text (`extra: { product: 'Product' }` gives `post.extra.product`).
+
 Or let the kit add the properties for you: after steps 2 to 4, give the connection *Update content* and *Insert content* for a moment and run `npm run notion:setup`. Add `-- --demo` to also create the demo posts, with covers and images uploaded to Notion. Then take the extra capabilities away again: the site only reads.
 
 **2. Create a connection.** In Notion's [Developer portal](https://app.notion.com/developers/connections), under Build, open Internal connections and create a new connection for your workspace (you need to be a workspace owner). In its Configuration tab, keep only **Read content** under Capabilities, then copy the **API token** from the Integration token section.

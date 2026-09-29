@@ -72,6 +72,7 @@ function fakePost(id: string, category = '', tags: string[] = []): Post {
     cover: null,
     coverAlt: '',
     coverIsAi: false,
+    extra: {},
   };
 }
 

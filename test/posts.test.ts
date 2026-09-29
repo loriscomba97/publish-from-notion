@@ -134,3 +134,29 @@ describe('finding posts by URL segment', () => {
   });
 
 });
+
+describe('site-specific properties', () => {
+  it('tries several cover properties in order, then the page cover', async () => {
+    const multi = defineBlogConfig({ dataSource: uuid(500), properties: { cover: ['New cover', 'Old cover'] } });
+    const onlyOld = postRow({});
+    onlyOld.properties['Old cover'] = prop.files([{ type: 'external', external: { url: 'https://cdn.example.com/old.webp' } }], 'old');
+    const both = postRow({ slug: 'both' });
+    both.properties['New cover'] = prop.url('https://cdn.example.com/new.webp', 'new');
+    both.properties['Old cover'] = prop.files([{ type: 'external', external: { url: 'https://cdn.example.com/old.webp' } }], 'old');
+    const { posts } = await queryPosts(mockClient({ rows: [onlyOld, both] }), multi);
+    const cover = (slug: string) => {
+      const c = posts.find((p) => p.slug === slug)?.cover;
+      return c?.kind === 'external' ? c.url : null;
+    };
+    assert.equal(cover('a-post'), 'https://cdn.example.com/old.webp');
+    assert.equal(cover('both'), 'https://cdn.example.com/new.webp');
+  });
+
+  it('reads extra properties as text', async () => {
+    const withExtra = defineBlogConfig({ dataSource: uuid(500), extra: { product: 'Product', missing: 'Nope' } });
+    const row = postRow({});
+    row.properties.Product = prop.select('Studio');
+    const { posts } = await queryPosts(mockClient({ rows: [row] }), withExtra);
+    assert.deepEqual(posts[0]?.extra, { product: 'Studio', missing: '' });
+  });
+});
