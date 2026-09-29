@@ -70,4 +70,4 @@ Hosting and Notion remain external services. The kit makes no ranking promises a
 
 Bug reports with a reproducible example are useful. [CONTRIBUTING.md](CONTRIBUTING.md) explains development and tests; report security issues through [SECURITY.md](SECURITY.md).
 
-[MIT](LICENSE) © 2026 Loris. Not affiliated with Notion Labs, Inc.
+[MIT](LICENSE) © 2026 Loris Comba. Not affiliated with Notion Labs, Inc.
