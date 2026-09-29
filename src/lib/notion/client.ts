@@ -5,8 +5,7 @@ import { normalizeNotionId } from './util';
  * Minimal client for the official Notion API, built on fetch alone (no SDK).
  *
  * - Retries 429, 5xx and network errors, honouring Retry-After, with jittered backoff.
- * - Caps requests in flight (Notion allows about three per second on average), so a build that
- *   renders every post does not trip the rate limit.
+ * - Caps concurrent requests. This is not a per-second rate limiter; 429 responses are retried.
  * - Throws on real failures instead of returning partial data: a post must never be published
  *   with half its body. In Next.js a failed revalidation keeps serving the previous version.
  * - Accepts a data source id, a database id or a pasted database URL.

@@ -90,7 +90,7 @@ describe('integration webhooks (any plan)', () => {
 
   it('logs the one-time verification token only while none is configured', async () => {
     const logs: string[] = [];
-    const first = await handleNotionWebhook(post({ verification_token: 'token-from-notion' }), { ...options, verificationToken: undefined, log: (m) => logs.push(m) });
+    const first = await handleNotionWebhook(post({ verification_token: 'token-from-notion' }), { ...options, verificationToken: undefined, allowVerificationLogs: true, log: (m) => logs.push(m) });
     assert.deepEqual(first, { ok: true, action: 'verification' });
     assert.match(logs[0] ?? '', /token-from-notion/);
     await handleNotionWebhook(post({ verification_token: 'another-token' }), { ...options, log: (m) => logs.push(m) });
@@ -100,7 +100,7 @@ describe('integration webhooks (any plan)', () => {
   it('recognizes the handshake even when it carries a signature header', async () => {
     const logs: string[] = [];
     const request = post({ verification_token: 'token-from-notion' }, { 'x-notion-signature': 'sha256=whatever' });
-    const outcome = await handleNotionWebhook(request, { ...options, verificationToken: undefined, log: (m) => logs.push(m) });
+    const outcome = await handleNotionWebhook(request, { ...options, verificationToken: undefined, allowVerificationLogs: true, log: (m) => logs.push(m) });
     assert.deepEqual(outcome, { ok: true, action: 'verification' });
     assert.match(logs[0] ?? '', /Token: token-from-notion$/);
   });

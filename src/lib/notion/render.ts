@@ -21,8 +21,7 @@ import { compactId, escapeHtml, normalizeNotionId, prettyUrl, safeHref, safeSrc,
  *
  * Safety: every piece of text is escaped, and links pass through safeHref, so a `javascript:`
  * link typed in Notion never reaches the page. Links to pages of your workspace are rewritten to
- * the matching post, or dropped when the page is not a published post, so private workspace
- * URLs never leak into public HTML.
+ * the matching post, or dropped when the page is not a published post, so recognized workspace page links do not lead into private content.
  *
  * Structure: the page title is the only h1, so Notion headings are shifted down one level and
  * get stable, unique ids for anchors and a table of contents. Unknown block types are reported
@@ -223,7 +222,7 @@ function renderBlock(node: BlockNode, ctx: Context): string {
       const caption = text(link.caption);
       const embed = videoEmbed(link.url, caption, plainText(link.caption));
       if (embed) return embed;
-      const href = safeHref(link.url);
+      const href = linkOf({ type: 'text', plain_text: '', href: link.url }, ctx);
       return href ? linkParagraph(href, caption, 'bookmark') : '';
     }
 
@@ -326,16 +325,17 @@ function linkOf(item: RichText, ctx: Context): string | null {
     if (item.mention?.type === 'user' || item.mention?.type === 'database') return null;
   }
   if (!item.href) return null;
+  const rawHref = item.href.trim();
   // Relative links such as "/1a2b3c..." or "/p/1a2b3c..." point inside the workspace.
-  const relative = item.href.match(/^\/(?:p\/)?(?:[^/?#]*-)?([0-9a-f]{32})(?:[?#].*)?$/i);
+  const relative = rawHref.match(/^\/(?:p\/)?(?:[^/?#]*-)?([0-9a-f]{32})(?:[?#].*)?$/i);
   if (relative?.[1]) return ctx.resolvePage(relative[1])?.href ?? null;
   // Links to the Notion app (notion.so, app.notion.com) are workspace links: rewritten to the post,
   // or dropped. Published Notion sites (*.notion.site) are public by definition and are kept.
-  if (WORKSPACE_LINK.test(item.href)) {
-    const id = normalizeNotionId(item.href);
+  if (WORKSPACE_LINK.test(rawHref)) {
+    const id = normalizeNotionId(rawHref);
     return (id ? ctx.resolvePage(id)?.href : null) ?? null;
   }
-  return safeHref(item.href);
+  return safeHref(rawHref);
 }
 
 function uniqueId(label: string, ctx: Context): string {

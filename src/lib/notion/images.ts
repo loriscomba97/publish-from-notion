@@ -9,7 +9,7 @@ import { compactId, constantTimeEqual, hmacSha256, safeSrc, toBase64Url } from '
  *   /notion-image/<kind>/<id>[/<property>/<index>]/<version>/<signature>
  *
  * The route asks Notion for a fresh URL, streams the bytes once and lets the CDN cache them for
- * a year. `version` changes when the image is edited, so caches never go stale. The signature
+ * a year. `version` changes when the image is edited, so newly rendered pages can request the changed image. Old URLs remain usable. The signature
  * (HMAC) means the route only serves images this site rendered: nobody can use it to read other
  * files from your workspace by guessing ids.
  */
@@ -100,6 +100,18 @@ export async function currentImageUrl(client: NotionClient, ref: NotionImageRef)
   return urlOf(files[ref.index]);
 }
 
+function allowedFileUrl(value: string, extraHosts: readonly string[]): boolean {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== 'https:' || u.username || u.password || (u.port && u.port !== '443')) return false;
+    const h = u.hostname;
+    return h === 'file.notion.so' || h === 'secure.notion-static.com' ||
+      /^prod-files-secure\.s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com$/.test(h) ||
+      (/^s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com$/.test(h) && u.pathname.startsWith('/secure.notion-static.com/')) ||
+      extraHosts.includes(h);
+  } catch { return false; }
+}
+
 const IMAGE_HEADERS = {
   // Scripts inside an uploaded SVG must never run on your origin.
   'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
@@ -112,7 +124,7 @@ const IMAGE_HEADERS = {
  */
 export async function serveNotionImage(
   segments: string[],
-  options: { client: NotionClient; key: string; fetch?: typeof fetch },
+  options: { client: NotionClient; key: string; fetch?: typeof fetch; allowedFileHosts?: readonly string[] },
 ): Promise<Response> {
   const notFound = () => new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
   const unavailable = () => new Response('Image temporarily unavailable', { status: 502, headers: { 'Cache-Control': 'no-store' } });
@@ -132,9 +144,11 @@ export async function serveNotionImage(
     return new Response(null, { status: 302, headers: { Location: source.url, 'Cache-Control': 'public, max-age=3600' } });
   }
 
+  if (!allowedFileUrl(source.url, options.allowedFileHosts ?? [])) return unavailable();
+
   let upstream: Response;
   try {
-    upstream = await (options.fetch ?? fetch)(source.url);
+    upstream = await (options.fetch ?? fetch)(source.url, { redirect: 'error', signal: AbortSignal.timeout(15_000) });
   } catch {
     return unavailable();
   }

@@ -51,7 +51,7 @@ describe('signed image paths', () => {
 
 describe('serveNotionImage', () => {
   const blockId = uuid(310);
-  const hostedBlock = { object: 'block', id: blockId, type: 'image', has_children: false, image: { type: 'file', file: { url: 'https://files.example/fresh.png' } } } as NotionBlock;
+  const hostedBlock = { object: 'block', id: blockId, type: 'image', has_children: false, image: { type: 'file', file: { url: 'https://prod-files-secure.s3.us-west-2.amazonaws.com/fresh.png' } } } as NotionBlock;
 
   it('streams a fresh copy with year-long caching and a sandbox for SVG', async () => {
     const client = mockClient({ blocks: [hostedBlock] });
@@ -64,7 +64,7 @@ describe('serveNotionImage', () => {
     assert.equal(res.headers.get('cache-control'), 'public, max-age=31536000, immutable');
     assert.match(res.headers.get('content-security-policy') ?? '', /sandbox/);
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
-    assert.equal(requests[0]?.url, 'https://files.example/fresh.png');
+    assert.equal(requests[0]?.url, 'https://prod-files-secure.s3.us-west-2.amazonaws.com/fresh.png');
     assert.deepEqual(client.calls[0]?.options, { fresh: true });
   });
 
@@ -104,8 +104,8 @@ describe('serveNotionImage', () => {
       Name: prop.title('Post'),
       Cover: prop.files(
         [
-          { type: 'file', file: { url: 'https://files.example/first.png' } },
-          { type: 'file', file: { url: 'https://files.example/second.png' } },
+          { type: 'file', file: { url: 'https://prod-files-secure.s3.us-west-2.amazonaws.com/first.png' } },
+          { type: 'file', file: { url: 'https://prod-files-secure.s3.us-west-2.amazonaws.com/second.png' } },
         ],
         'cov',
       ),
@@ -114,6 +114,6 @@ describe('serveNotionImage', () => {
     const path = await signImagePath({ kind: 'property', id: row.id, property: 'cov', index: 1 }, 'v1', { key: KEY, basePath });
     const res = await serveNotionImage(segmentsOf(path), { client: mockClient({ pages: [row] }), key: KEY, fetch });
     assert.equal(res.status, 200);
-    assert.equal(requests[0]?.url, 'https://files.example/second.png');
+    assert.equal(requests[0]?.url, 'https://prod-files-secure.s3.us-west-2.amazonaws.com/second.png');
   });
 });
