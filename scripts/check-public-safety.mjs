@@ -6,15 +6,21 @@
  * is published for good. The scan fails when it finds:
  *   - credentials (Notion, Stripe, GitHub, AWS, Google, Slack tokens, JWTs, private keys);
  *   - files that must never be committed (.env files, keys, service-account JSON);
- *   - email addresses other than example.* and GitHub noreply ones;
- *   - with --history: commit author or committer emails that are not GitHub noreply;
+ *   - email addresses other than example.* and GitHub noreply ones in files;
+ *   - with --identities: commit author or committer emails that are not GitHub noreply, and any
+ *     email address in commit messages;
  *   - terms from the maintainer's private denylist (names, internal ids, domains). The
  *     denylist lives OUTSIDE the repository, so the list itself is never published.
  *
  * Usage:
  *   node scripts/check-public-safety.mjs              working tree (tracked + untracked, not ignored)
- *   node scripts/check-public-safety.mjs --history    every blob, path, commit message and identity in every ref
+ *   node scripts/check-public-safety.mjs --history    every blob, path and commit message in every ref
+ *   --unpushed                                        with --history: only what no remote has yet
+ *   --identities                                      with --history: commit identities too (maintainer hooks)
  *   --require-denylist                                fail when the private denylist is missing (maintainer hooks)
+ *
+ * CI runs --history without --identities: contributors commit with whatever email they like,
+ * and the maintainer's own identity is checked by the hooks before anything leaves their machine.
  *
  * Private denylist: the path in $PUBLIC_SAFETY_DENYLIST, else "<repo-folder>.denylist.txt" next to
  * the repository folder. One case-insensitive literal per line, "re:<regex>" for a pattern, and an
@@ -28,6 +34,8 @@ import { basename, dirname, join } from 'node:path';
 const args = new Set(process.argv.slice(2));
 const HISTORY = args.has('--history');
 const REQUIRE_DENYLIST = args.has('--require-denylist');
+const UNPUSHED = args.has('--unpushed');
+const IDENTITIES = args.has('--identities');
 
 const git = (...a) => execFileSync('git', a, { encoding: 'utf8', maxBuffer: 1 << 28 });
 const root = git('rev-parse', '--show-toplevel').trim();
@@ -83,13 +91,13 @@ if (!deny) {
   console.warn(`check-public-safety: ${msg}; running the generic checks only.`);
 }
 
-function scanText(text, where, file) {
+function scanText(text, where, file, { emails = true } = {}) {
   text.split('\n').forEach((line, i) => {
     for (const [label, re] of SECRET_RULES) {
       const m = line.match(re);
       if (m) report(where, i + 1, label, mask(m[0]));
     }
-    for (const e of line.match(EMAIL) ?? []) {
+    for (const e of emails ? (line.match(EMAIL) ?? []) : []) {
       if (!ALLOWED_EMAIL.test(e)) report(where, i + 1, 'email address', mask(e));
     }
     for (const r of deny ?? []) {
@@ -99,9 +107,12 @@ function scanText(text, where, file) {
 }
 
 if (HISTORY) {
-  // Every blob reachable from any ref, with the first path it was seen at.
+  // Every ref, or with --unpushed only what no remote-tracking ref already has: commits merged on
+  // the remote (a contributor's pull request, say) are public already and never block a push.
+  const refs = UNPUSHED ? ['--all', '--not', '--remotes'] : ['--all'];
+  // Every blob reachable from those refs, with the first path it was seen at.
   const pathOf = new Map();
-  for (const l of git('rev-list', '--objects', '--all').split('\n')) {
+  for (const l of git('rev-list', '--objects', ...refs).split('\n')) {
     const [sha, ...p] = l.split(' ');
     if (sha && p.length && !pathOf.has(sha)) pathOf.set(sha, p.join(' '));
   }
@@ -120,14 +131,16 @@ if (HISTORY) {
     const buf = execFileSync('git', ['cat-file', 'blob', sha], { cwd: root, maxBuffer: 1 << 28 });
     if (!isBinary(buf)) scanText(buf.toString('utf8'), `${file} (history ${sha.slice(0, 7)})`, file);
   }
-  const hasCommits = git('rev-list', '--all', '--max-count=1').trim() !== '';
+  const hasCommits = git('rev-list', ...refs, '--max-count=1').trim() !== '';
   if (hasCommits) {
-    for (const e of new Set(git('log', '--all', '--format=%ae%n%ce').split('\n').filter(Boolean))) {
-      if (!IDENTITY_EMAIL.test(e)) report('commit identity', 0, 'author/committer email is not GitHub noreply', mask(e));
+    if (IDENTITIES) {
+      for (const e of new Set(git('log', ...refs, '--format=%ae%n%ce').split('\n').filter(Boolean))) {
+        if (!IDENTITY_EMAIL.test(e)) report('commit identity', 0, 'author/committer email is not GitHub noreply', mask(e));
+      }
     }
-    for (const entry of git('log', '--all', '--format=%h%x00%B%x01').split('\x01')) {
+    for (const entry of git('log', ...refs, '--format=%h%x00%B%x01').split('\x01')) {
       const [sha, body] = entry.replace(/^\n/, '').split('\0');
-      if (sha && body) scanText(body, `commit message ${sha}`, '');
+      if (sha && body) scanText(body, `commit message ${sha}`, '', { emails: IDENTITIES });
     }
   }
 } else {

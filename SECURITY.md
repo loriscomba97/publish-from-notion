@@ -17,7 +17,7 @@ Out of scope: the configuration of your own Notion workspace or hosting account.
 - The Notion API token is read on the server only and never sent to the browser. The site needs **Read content** and nothing more.
 - The webhook refuses every request unless its secret or verification token is configured. Secrets are compared in constant time, and Notion's event signatures (HMAC-SHA256) are verified on the raw body.
 - Image URLs are signed with HMAC, so the image route cannot be used to read other files from a workspace. SVGs are served with a sandboxing Content-Security-Policy.
-- Every commit runs a scan for credentials, keys and email addresses across the whole history.
+- Every push to `main` and every pull request is scanned for credentials, keys and email addresses, history included.
 
 ## Supported versions
 
