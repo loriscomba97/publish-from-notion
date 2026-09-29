@@ -46,12 +46,18 @@ export function compactId(id: string): string {
 }
 
 /**
+ * Backslashes and control characters, which browsers may drop or read as a slash: "/<tab>/evil.com"
+ * and "/\evil.com" both become "//evil.com". Spaces are fine: a URL keeps them percent-encoded.
+ */
+const AMBIGUOUS = /[\\\p{Cc}]/u;
+
+/**
  * Link target that is safe to put in an href: http(s), mailto and tel URLs, site-relative paths
  * and fragments. Everything else (javascript:, data:, protocol-relative //host) returns null.
  */
 export function safeHref(href: string): string | null {
   const value = href.trim();
-  if (/[\\\u0000-\u0020\u007f]/.test(value)) return null;
+  if (AMBIGUOUS.test(value)) return null;
   if (value.startsWith('#')) return value;
   if (value.startsWith('/') && !value.startsWith('//')) return value;
   try {
@@ -65,7 +71,7 @@ export function safeHref(href: string): string | null {
 /** Image or media source that is safe to put in a src: http(s) URLs and site-relative paths. */
 export function safeSrc(src: string): string | null {
   const value = src.trim();
-  if (/[\\\u0000-\u0020\u007f]/.test(value)) return null;
+  if (AMBIGUOUS.test(value)) return null;
   if (value.startsWith('/') && !value.startsWith('//')) return value;
   try {
     const url = new URL(value);

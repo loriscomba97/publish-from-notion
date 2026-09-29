@@ -7,6 +7,7 @@
 - **Collections:** featured entries listed first (`properties.featured`), extra image properties (`images`), a collection label and schema type (`label`, `articleType`), links between collections (`links` in `loadArticle`), and sitemap entries without a second home page (`{ home: false }`).
 - **Tooling:** the content check covers every configured collection; `npm run notion:setup -- --collection stories` or `-- --collection changelog` adds their properties.
 - **Template:** the navigation, home page, sitemap and llms.txt include the collections that are on; the header wraps on narrow screens.
+- **Fixed:** links and images whose URL contains a space were dropped since 1.0.0. They are percent-encoded again; backslashes and control characters are still refused.
 
 ## 1.0.0 (2026-09-29)
 

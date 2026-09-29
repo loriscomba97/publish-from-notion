@@ -58,6 +58,12 @@ describe('normalizeNotionId', () => {
 });
 
 describe('safeHref and safeSrc', () => {
+  it('keeps URLs with spaces, percent-encoded, as pasted from a storage bucket', () => {
+    assert.equal(safeSrc('https://storage.example.com/media/AI in Pro Tools.jpg'), 'https://storage.example.com/media/AI%20in%20Pro%20Tools.jpg');
+    assert.equal(safeHref('https://example.com/Pricing (2026).pdf'), 'https://example.com/Pricing%20(2026).pdf');
+    assert.equal(safeHref('/docs/getting started'), '/docs/getting started');
+  });
+
   it('keeps web, mail and phone links, relative paths and fragments', () => {
     assert.equal(safeHref('https://example.com/a?b=1'), 'https://example.com/a?b=1');
     assert.equal(safeHref('mailto:hello@example.com'), 'mailto:hello@example.com');
