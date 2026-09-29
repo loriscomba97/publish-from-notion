@@ -42,7 +42,8 @@ export const AI_IMAGE_NOTE = 'AI-generated illustration.';
 export function coverAltText(post: Pick<Post, 'coverAlt' | 'coverIsAi'>): string {
   const alt = post.coverAlt.trim();
   if (!post.coverIsAi) return alt;
-  return alt ? `${alt.replace(/[\s.]+$/, '')}. ${AI_IMAGE_NOTE}` : AI_IMAGE_NOTE;
+  if (!alt) return AI_IMAGE_NOTE;
+  return /[.!?]$/.test(alt) ? `${alt} ${AI_IMAGE_NOTE}` : `${alt}. ${AI_IMAGE_NOTE}`;
 }
 
 export function publishFilter(rule: PublishRule): Record<string, unknown> {

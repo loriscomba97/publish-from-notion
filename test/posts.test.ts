@@ -122,6 +122,7 @@ describe('covers', () => {
     assert.equal(coverAltText({ coverAlt: 'A robot writing', coverIsAi: true }), 'A robot writing. AI-generated illustration.');
     assert.equal(coverAltText({ coverAlt: '', coverIsAi: true }), 'AI-generated illustration.');
     assert.equal(coverAltText({ coverAlt: 'A photo.', coverIsAi: false }), 'A photo.');
+    assert.equal(coverAltText({ coverAlt: 'Mixing, at last!', coverIsAi: true }), 'Mixing, at last! AI-generated illustration.');
   });
 });
 

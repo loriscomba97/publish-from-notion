@@ -9,7 +9,7 @@ import type { Post } from './posts';
  * construction every post is linked from exactly one other post, however many are added.
  * The other slots are the closest by category and shared tags, in a stable order.
  */
-export function relatedPosts(posts: Post[], current: Post, count = 3): Post[] {
+export function relatedPosts<T extends Pick<Post, 'id' | 'category' | 'tags'>>(posts: T[], current: T, count = 3): T[] {
   const index = posts.findIndex((p) => p.id === current.id);
   const ring = index >= 0 && posts.length > 1 ? posts[(index + 1) % posts.length] : undefined;
   const tags = new Set(current.tags);
