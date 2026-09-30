@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
 import { StoryCard } from '@/components/StoryCard';
-import { FEED_ALTERNATE, getStories, STORIES_ON, storiesConfig } from '@/lib/blog';
+import { FEED_ALTERNATE, getStories, SHARE_IMAGE, STORIES_ON, storiesConfig } from '@/lib/blog';
 import { blogJsonLd } from '@/lib/notion';
 
 export const revalidate = 3600;
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: storiesConfig.label,
   description,
   alternates: { canonical: storiesConfig.basePath, types: FEED_ALTERNATE },
-  openGraph: { type: 'website', url: storiesConfig.basePath, title: `${storiesConfig.label} | ${storiesConfig.siteName}`, description, siteName: storiesConfig.siteName },
+  openGraph: { type: 'website', url: storiesConfig.basePath, title: `${storiesConfig.label} | ${storiesConfig.siteName}`, description, siteName: storiesConfig.siteName, images: [SHARE_IMAGE] },
 };
 
 export default async function StoriesPage() {
@@ -30,8 +30,8 @@ export default async function StoriesPage() {
         <p className="empty">No stories yet. Tick Published on a story in Notion and it appears here.</p>
       ) : (
         <div className="cards cards-feature">
-          {stories.map((story) => (
-            <StoryCard key={story.id} story={story} />
+          {stories.map((story, i) => (
+            <StoryCard key={story.id} story={story} priority={i === 0} />
           ))}
         </div>
       )}

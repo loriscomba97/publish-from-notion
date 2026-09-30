@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CHANGELOG_FEED_ALTERNATE, CHANGELOG_ON, changelogConfig, formatDate, getReleaseEntries } from '@/lib/blog';
+import { CHANGELOG_FEED_ALTERNATE, CHANGELOG_ON, changelogConfig, formatDate, getReleaseEntries, SHARE_IMAGE } from '@/lib/blog';
 import { releaseName } from '@/lib/notion';
 
 export const revalidate = 3600;
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: changelogConfig.label,
   description,
   alternates: { canonical: changelogConfig.basePath, types: CHANGELOG_FEED_ALTERNATE },
-  openGraph: { type: 'website', url: changelogConfig.basePath, title: `${changelogConfig.label} | ${changelogConfig.siteName}`, description, siteName: changelogConfig.siteName },
+  openGraph: { type: 'website', url: changelogConfig.basePath, title: `${changelogConfig.label} | ${changelogConfig.siteName}`, description, siteName: changelogConfig.siteName, images: [SHARE_IMAGE] },
 };
 
 export default async function ChangelogPage() {

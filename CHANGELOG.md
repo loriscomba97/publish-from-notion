@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Template:** a default sharing image, generated from the site name and description, for the home page, the indexes and every post without a cover (`src/app/opengraph-image.tsx`); a canonical URL on the home page; the first card of a list loads its cover first instead of lazily.
+
 ## 1.1.0 (2026-09-29)
 
 - **Changelog:** a Notion database of releases, published as one page with an anchor per release, an RSS feed of releases, sitemap and llms.txt entries, and optional notes from each release's page (`defineChangelogConfig`, `queryReleases`, `loadReleaseNotes`, `changelogFeed`).

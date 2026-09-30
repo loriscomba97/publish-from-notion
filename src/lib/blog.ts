@@ -44,6 +44,12 @@ export const config = DEMO ? { ...blog, dataSource: DEMO_SOURCES.blog } : blog;
 export const storiesConfig = DEMO ? { ...stories, dataSource: DEMO_SOURCES.stories } : stories;
 export const changelogConfig = DEMO ? { ...changelog, dataSource: DEMO_SOURCES.changelog } : changelog;
 
+/**
+ * The default sharing image, generated from the site name by src/app/opengraph-image.tsx. Pages
+ * without a cover of their own share it.
+ */
+export const SHARE_IMAGE = { url: '/opengraph-image', width: 1200, height: 630, alt: config.siteName };
+
 /** Customer stories and the changelog are optional: each is on once its database is set. */
 export const STORIES_ON = Boolean(storiesConfig.dataSource);
 export const CHANGELOG_ON = Boolean(changelogConfig.dataSource);

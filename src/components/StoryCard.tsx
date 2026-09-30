@@ -3,7 +3,7 @@ import { coverAltText, coverUrl, imageUrl, storiesConfig } from '@/lib/blog';
 import type { Post } from '@/lib/notion';
 
 /** A customer story in a grid: cover, company, title, the pull quote and who said it. */
-export async function StoryCard({ story, headingLevel = 2 }: { story: Post; headingLevel?: 2 | 3 }) {
+export async function StoryCard({ story, headingLevel = 2, priority = false }: { story: Post; headingLevel?: 2 | 3; priority?: boolean }) {
   const [cover, avatar] = await Promise.all([coverUrl(story), imageUrl(story.images.avatar)]);
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const { customer, role, company, quote } = story.extra;
@@ -12,7 +12,11 @@ export async function StoryCard({ story, headingLevel = 2 }: { story: Post; head
       <Link href={`${storiesConfig.basePath}/${story.slug}`} className="card-link">
         <div className="card-cover">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {cover ? <img src={cover} alt={coverAltText(story)} loading="lazy" decoding="async" /> : <span aria-hidden="true" />}
+          {cover ? (
+            <img src={cover} alt={coverAltText(story)} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" />
+          ) : (
+            <span aria-hidden="true" />
+          )}
         </div>
         <div className="card-body">
           <p className="eyebrow">

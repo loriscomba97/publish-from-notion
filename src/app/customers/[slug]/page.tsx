@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
 import { StoryCard } from '@/components/StoryCard';
-import { coverAltText, coverUrl, FEED_ALTERNATE, formatDate, getStories, getStoryArticle, imageUrl, STORIES_ON, storiesConfig } from '@/lib/blog';
+import { coverAltText, coverUrl, FEED_ALTERNATE, formatDate, getStories, getStoryArticle, imageUrl, SHARE_IMAGE, STORIES_ON, storiesConfig } from '@/lib/blog';
 import { findPost, postJsonLd, postMetadata, relatedPosts } from '@/lib/notion';
 
 export const revalidate = 3600;
@@ -18,7 +18,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const story = findPost(await getStories(), slug);
   if (!story) return {};
-  const meta = postMetadata(storiesConfig, story, { imageUrl: await coverUrl(story), imageAlt: coverAltText(story) });
+  // A story without a cover shares the site's default image.
+  const cover = await coverUrl(story);
+  const meta = postMetadata(storiesConfig, story, cover ? { imageUrl: cover, imageAlt: coverAltText(story) } : { imageUrl: SHARE_IMAGE.url, imageAlt: SHARE_IMAGE.alt });
   return {
     title: story.seoTitle ? { absolute: meta.title } : meta.title,
     description: meta.description,

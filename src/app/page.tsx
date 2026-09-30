@@ -1,11 +1,16 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PostCard } from '@/components/PostCard';
 import { SetupNotice } from '@/components/SetupNotice';
 import { StoryCard } from '@/components/StoryCard';
-import { changelogConfig, config, formatDate, getPosts, getReleases, getStories, notion, storiesConfig } from '@/lib/blog';
+import { changelogConfig, config, FEED_ALTERNATE, formatDate, getPosts, getReleases, getStories, notion, storiesConfig } from '@/lib/blog';
 import { releaseName, releasePath } from '@/lib/notion';
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/', types: FEED_ALTERNATE },
+};
 
 export default async function HomePage() {
   const [posts, stories, releases] = await Promise.all([getPosts(), getStories(), getReleases()]);
@@ -27,8 +32,8 @@ export default async function HomePage() {
             <Link href={config.basePath}>All posts →</Link>
           </div>
           <div className="cards">
-            {posts.slice(0, 3).map((post) => (
-              <PostCard key={post.id} post={post} headingLevel={3} />
+            {posts.slice(0, 3).map((post, i) => (
+              <PostCard key={post.id} post={post} headingLevel={3} priority={i === 0} />
             ))}
           </div>
         </section>

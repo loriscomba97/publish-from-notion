@@ -18,6 +18,6 @@ Errors include no published posts, missing titles or slugs, duplicate slugs, tem
 
 ## Search output
 
-Metadata, canonical URLs, JSON-LD, sitemap and RSS are generated from published posts. A heading named `FAQ` with at least two question-and-answer pairs can produce FAQPage data. `llms.txt` is a text index for tools that choose to read it. None of these guarantees search visibility, rankings or inclusion in an assistant’s answer.
+Metadata, canonical URLs, JSON-LD, sitemap and RSS are generated from published posts. Pages without a cover of their own, the home page and the indexes included, share a default image generated from the site name and description by `src/app/opengraph-image.tsx`: replace it with your own design. A heading named `FAQ` with at least two question-and-answer pairs can produce FAQPage data. `llms.txt` is a text index for tools that choose to read it. None of these guarantees search visibility, rankings or inclusion in an assistant’s answer.
 
 [Back to README](../README.md)

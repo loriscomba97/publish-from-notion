@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { JsonLd } from '@/components/JsonLd';
 import { PostCard } from '@/components/PostCard';
-import { config, coverAltText, coverUrl, FEED_ALTERNATE, formatDate, getArticle, getPosts } from '@/lib/blog';
+import { config, coverAltText, coverUrl, FEED_ALTERNATE, formatDate, getArticle, getPosts, SHARE_IMAGE } from '@/lib/blog';
 import { findPost, postJsonLd, postMetadata, relatedPosts } from '@/lib/notion';
 
 export const revalidate = 3600;
@@ -18,7 +18,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = findPost(await getPosts(), slug);
   if (!post) return {};
-  const meta = postMetadata(config, post, { imageUrl: await coverUrl(post), imageAlt: coverAltText(post) });
+  // A post without a cover shares the site's default image.
+  const cover = await coverUrl(post);
+  const meta = postMetadata(config, post, cover ? { imageUrl: cover, imageAlt: coverAltText(post) } : { imageUrl: SHARE_IMAGE.url, imageAlt: SHARE_IMAGE.alt });
   return {
     // A title written for search in Notion is used as is; otherwise the site name is appended.
     title: post.seoTitle ? { absolute: meta.title } : meta.title,
